@@ -1,0 +1,1828 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#171210">
+<title>大雍·社稷 — 帝王平衡术</title>
+<style>
+:root{
+  --bg:#171210; --bg2:#211a14; --panel:#262017; --panel2:#2e2619;
+  --ink:#e9dcc0; --ink-dim:#9c8f78; --ink-faint:#6f6353;
+  --gold:#c9a455; --gold-dim:#8a7340; --gold-bright:#e8c87a;
+  --cinnabar:#c0443a; --cinnabar-bright:#e05c50;
+  --green:#7da57f; --blue:#7e9ab0;
+  --paper:#e7d6ae; --paper2:#dcc99c; --paper-ink:#332a1c;
+  --f-gentry:#9d7bbf; --f-scholar:#6b9ab3; --f-eunuch:#c08a3e; --f-consort:#c4708c; --f-army:#7e9064;
+  --radius:10px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overscroll-behavior:none}
+body{
+  background:var(--bg);
+  background-image:
+    radial-gradient(ellipse 120% 60% at 50% -10%, rgba(201,164,85,.06), transparent 60%),
+    repeating-linear-gradient(0deg, transparent 0 2px, rgba(0,0,0,.12) 2px 4px);
+  color:var(--ink);
+  font-family:"Songti SC","STSong","SimSun","Noto Serif CJK SC",serif;
+  font-size:15px; line-height:1.65;
+  touch-action:manipulation;
+  user-select:none;-webkit-user-select:none;
+  display:flex;flex-direction:column;
+  height:100dvh; overflow:hidden;
+}
+.kai{font-family:"Kaiti SC","STKaiti","KaiTi","Songti SC",serif}
+
+/* ======= 顶栏 ======= */
+#topbar{
+  flex:0 0 auto; padding:calc(env(safe-area-inset-top) + 8px) 12px 8px;
+  background:linear-gradient(180deg, #1d1812, #171210);
+  border-bottom:1px solid #3a2f1e;
+}
+#era-line{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:7px}
+#era-name{font-size:17px;letter-spacing:2px;color:var(--gold-bright);font-weight:700}
+#era-sub{font-size:12px;color:var(--ink-dim);letter-spacing:1px}
+#stats{display:flex;gap:8px}
+.stat{flex:1;background:var(--panel);border:1px solid #3a2f1e;border-radius:8px;padding:5px 6px 6px;position:relative;overflow:hidden}
+.stat .s-label{display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--ink-dim);letter-spacing:1px}
+.stat .s-glyph{font-family:"Kaiti SC","STKaiti","KaiTi",serif;font-size:13px;color:var(--gold)}
+.stat .s-val{font-size:17px;font-weight:700;line-height:1.2;font-variant-numeric:tabular-nums;transition:color .3s}
+.stat .s-bar{height:3px;border-radius:2px;background:#15110c;margin-top:3px;overflow:hidden}
+.stat .s-bar i{display:block;height:100%;border-radius:2px;background:var(--gold);transition:width .5s ease, background .5s}
+.stat.low .s-val{color:var(--cinnabar-bright)}
+.stat.low .s-bar i{background:var(--cinnabar)}
+.stat .delta{position:absolute;right:6px;top:22px;font-size:12px;font-weight:700;opacity:0;transform:translateY(4px);pointer-events:none}
+.stat .delta.show{animation:dpop 1.6s ease forwards}
+@keyframes dpop{0%{opacity:0;transform:translateY(6px)}15%{opacity:1;transform:translateY(0)}75%{opacity:1}100%{opacity:0;transform:translateY(-8px)}}
+.d-up{color:#9fc99a}.d-dn{color:var(--cinnabar-bright)}
+
+/* ======= 主区 ======= */
+#main{flex:1 1 auto;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 12px calc(env(safe-area-inset-bottom) + 76px);position:relative}
+.page{display:none;animation:fadein .25s ease}
+.page.on{display:block}
+@keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+h3.sec{font-size:13px;color:var(--gold);letter-spacing:3px;margin:18px 0 8px;display:flex;align-items:center;gap:8px}
+h3.sec::before,h3.sec::after{content:"";height:1px;background:linear-gradient(90deg,transparent,var(--gold-dim));flex:1}
+h3.sec::after{background:linear-gradient(90deg,var(--gold-dim),transparent)}
+
+/* ======= 奏折卡 ======= */
+#memo-wrap{max-width:520px;margin:0 auto}
+.memo-count{text-align:center;font-size:12px;color:var(--ink-faint);letter-spacing:2px;margin-bottom:8px}
+.memo{
+  background:linear-gradient(175deg,var(--paper) 0%, var(--paper2) 100%);
+  color:var(--paper-ink);
+  border-radius:6px; position:relative;
+  box-shadow:0 6px 24px rgba(0,0,0,.5), inset 0 0 40px rgba(120,90,40,.12);
+  animation:memoin .4s cubic-bezier(.2,.8,.3,1);
+  margin-bottom:14px;
+}
+@keyframes memoin{from{opacity:0;transform:translateY(24px) scale(.97)}to{opacity:1;transform:none}}
+.memo::before,.memo::after{content:"";display:block;height:10px;background:
+  repeating-linear-gradient(90deg,#b3892e 0 14px,#9a7426 14px 28px);opacity:.85}
+.memo::before{border-radius:6px 6px 0 0}
+.memo::after{border-radius:0 0 6px 6px}
+.memo-inner{padding:14px 16px 16px}
+.memo-src{font-size:11.5px;color:#7a6845;letter-spacing:1px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center}
+.memo-src .fchip{font-size:10.5px;padding:1px 7px;border-radius:99px;color:#fff;opacity:.85}
+.memo-title{font-family:"Kaiti SC","STKaiti","KaiTi",serif;font-size:19px;font-weight:700;letter-spacing:1px;margin-bottom:8px;color:#26200f}
+.memo-body{font-size:14.5px;line-height:1.8;white-space:pre-line}
+.opts{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:9px}
+.opt{
+  background:var(--panel);border:1px solid #443720;border-radius:var(--radius);
+  padding:11px 13px;color:var(--ink);font-size:14.5px;text-align:left;
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+  min-height:48px;cursor:pointer;transition:transform .08s, background .15s, border-color .15s;
+  font-family:inherit;width:100%;
+}
+.opt:active{transform:scale(.985);background:var(--panel2);border-color:var(--gold-dim)}
+.opt .o-hint{flex:0 0 auto;font-size:11px;color:var(--ink-faint);letter-spacing:1px;text-align:right;line-height:1.5}
+.opt .o-hint b{font-weight:400}
+.hint-up{color:#8fb98a}.hint-dn{color:#cf7a6e}
+
+/* 朱印 */
+#seal-layer{position:fixed;inset:0;display:none;align-items:center;justify-content:center;pointer-events:none;z-index:60}
+#seal-layer.on{display:flex}
+.seal{
+  width:96px;height:96px;border:5px solid var(--cinnabar);border-radius:10px;
+  color:var(--cinnabar);display:flex;align-items:center;justify-content:center;
+  font-family:"Kaiti SC","STKaiti","KaiTi",serif;font-size:52px;font-weight:900;
+  transform:rotate(-8deg);background:rgba(192,68,58,.08);
+  box-shadow:0 0 0 2px rgba(192,68,58,.25) inset;
+  animation:stamp .5s cubic-bezier(.3,1.6,.4,1) forwards;
+}
+@keyframes stamp{0%{opacity:0;transform:rotate(-8deg) scale(2.6)}60%{opacity:1;transform:rotate(-8deg) scale(.92)}100%{opacity:1;transform:rotate(-8deg) scale(1)}}
+
+/* 结果面板 */
+.result-card{
+  max-width:520px;margin:0 auto;background:var(--panel);border:1px solid #4a3c22;border-radius:var(--radius);
+  padding:14px 15px;animation:fadein .3s ease;
+}
+.result-card .r-text{font-size:14.5px;color:var(--ink);line-height:1.8;margin-bottom:10px}
+.fx-list{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.fx{font-size:12px;padding:3px 9px;border-radius:99px;background:#1d1812;border:1px solid #3a2f1e;letter-spacing:.5px}
+.fx.up{color:#9fc99a;border-color:#3c4b35}.fx.dn{color:#e08a7e;border-color:#553028}.fx.neu{color:var(--ink-dim)}
+
+/* 通用按钮 */
+.btn{
+  display:block;width:100%;max-width:520px;margin:12px auto 0;
+  background:linear-gradient(180deg,#3a2e1a,#2c2314);border:1px solid var(--gold-dim);
+  color:var(--gold-bright);font-size:15px;letter-spacing:4px;padding:12px;border-radius:var(--radius);
+  font-family:"Kaiti SC","STKaiti","KaiTi",serif;cursor:pointer;min-height:48px;
+  transition:transform .08s;
+}
+.btn:active{transform:scale(.985)}
+.btn.danger{border-color:#6e3530;color:var(--cinnabar-bright);background:linear-gradient(180deg,#3a2020,#2c1714)}
+.btn.ghost{background:transparent;border-color:#443720;color:var(--ink-dim);letter-spacing:2px;font-size:13px;padding:9px;min-height:40px}
+.btn:disabled{opacity:.4;pointer-events:none}
+
+/* ======= 朝堂页 ======= */
+.fac-row{background:var(--panel);border:1px solid #3a2f1e;border-radius:var(--radius);padding:9px 12px;margin-bottom:8px}
+.fac-top{display:flex;justify-content:space-between;align-items:baseline}
+.fac-name{font-size:14.5px;letter-spacing:1px;font-weight:700}
+.fac-att{font-size:11.5px}
+.fac-bars{margin-top:6px}
+.fbar{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--ink-faint);margin-top:3px}
+.fbar .track{flex:1;height:5px;background:#15110c;border-radius:3px;overflow:hidden}
+.fbar .track i{display:block;height:100%;border-radius:3px;transition:width .5s}
+.fac-tag{font-size:10.5px;padding:1px 7px;border-radius:99px;border:1px solid;margin-left:6px;letter-spacing:1px}
+
+.office{background:var(--panel);border:1px solid #3a2f1e;border-radius:var(--radius);padding:10px 12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.office .o-left{min-width:0}
+.office .o-title{font-size:12px;color:var(--gold);letter-spacing:2px}
+.office .o-name{font-size:15px;font-weight:700;margin-top:1px;display:flex;align-items:center;gap:6px}
+.office .o-meta{font-size:11.5px;color:var(--ink-dim);margin-top:1px}
+.office .o-act{flex:0 0 auto}
+.mini-btn{background:#1d1812;border:1px solid #443720;color:var(--gold);border-radius:8px;padding:7px 12px;font-size:12.5px;letter-spacing:1px;font-family:inherit;cursor:pointer;min-height:36px}
+.mini-btn:active{background:var(--panel2)}
+.mini-btn.red{color:var(--cinnabar-bright);border-color:#553028}
+.mini-btn:disabled{opacity:.35;pointer-events:none}
+.fdot{display:inline-block;width:8px;height:8px;border-radius:50%;flex:0 0 auto}
+
+/* ======= 大臣卡 ======= */
+.min-card{background:var(--panel);border:1px solid #3a2f1e;border-radius:var(--radius);padding:10px 12px;margin-bottom:8px}
+.min-head{display:flex;justify-content:space-between;align-items:center}
+.min-name{font-size:15.5px;font-weight:700;display:flex;align-items:center;gap:7px}
+.min-office{font-size:11px;color:var(--gold);border:1px solid var(--gold-dim);padding:0 6px;border-radius:99px;letter-spacing:1px}
+.min-attrs{display:flex;gap:12px;font-size:11.5px;color:var(--ink-dim);margin-top:4px;flex-wrap:wrap}
+.min-attrs b{color:var(--ink);font-weight:400}
+.stars{color:var(--gold);letter-spacing:1px;font-size:11px}
+.min-acts{display:flex;gap:7px;margin-top:8px}
+.tag-warn{color:var(--cinnabar-bright)}
+
+/* ======= 宫闱 ======= */
+.pal-card{background:var(--panel);border:1px solid #3a2f1e;border-radius:var(--radius);padding:11px 13px;margin-bottom:8px}
+.pal-row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.pal-title{font-size:15px;font-weight:700}
+.pal-sub{font-size:11.5px;color:var(--ink-dim);margin-top:2px}
+.crown{color:var(--gold-bright);font-size:11px;border:1px solid var(--gold-dim);border-radius:99px;padding:0 6px;letter-spacing:1px}
+
+/* ======= 史册 ======= */
+.hist{border-left:2px solid #3a2f1e;margin-left:6px;padding-left:12px}
+.h-year{font-size:12px;color:var(--gold);letter-spacing:2px;margin:14px 0 4px;position:relative}
+.h-year::before{content:"";position:absolute;left:-17px;top:5px;width:8px;height:8px;border-radius:50%;background:var(--gold-dim)}
+.h-item{font-size:13px;color:var(--ink-dim);margin:3px 0;line-height:1.7}
+.h-item.whisper{color:#8d7f9d;font-style:normal}
+.h-item.whisper::before{content:"密 ";color:var(--cinnabar);font-size:11px;border:1px solid #5a3530;border-radius:3px;padding:0 3px;margin-right:4px}
+.h-item.big{color:var(--gold-bright)}
+.h-item.bad{color:var(--cinnabar-bright)}
+
+/* ======= 底部导航 ======= */
+#tabbar{
+  position:fixed;left:0;right:0;bottom:0;z-index:40;
+  display:flex;background:rgba(20,16,12,.96);backdrop-filter:blur(8px);
+  border-top:1px solid #3a2f1e;padding-bottom:env(safe-area-inset-bottom);
+}
+.tab{flex:1;padding:9px 0 7px;text-align:center;color:var(--ink-faint);font-size:11px;letter-spacing:1px;cursor:pointer;position:relative}
+.tab .t-glyph{display:block;font-family:"Kaiti SC","STKaiti","KaiTi",serif;font-size:19px;line-height:1.3;color:inherit}
+.tab.on{color:var(--gold-bright)}
+.tab .badge{position:absolute;top:4px;right:calc(50% - 18px);width:7px;height:7px;border-radius:50%;background:var(--cinnabar-bright);display:none}
+.tab .badge.show{display:block}
+
+/* ======= 模态 ======= */
+#modal-layer{position:fixed;inset:0;background:rgba(8,6,4,.78);display:none;align-items:flex-end;justify-content:center;z-index:50}
+#modal-layer.on{display:flex}
+#modal{
+  width:100%;max-width:560px;max-height:82dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  background:#221b13;border:1px solid #4a3c22;border-bottom:none;border-radius:16px 16px 0 0;
+  padding:16px 16px calc(env(safe-area-inset-bottom) + 16px);
+  animation:slideup .28s cubic-bezier(.2,.8,.3,1);
+}
+@keyframes slideup{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+#modal h4{font-family:"Kaiti SC","STKaiti","KaiTi",serif;font-size:18px;color:var(--gold-bright);letter-spacing:2px;margin-bottom:10px;text-align:center}
+#modal .m-body{font-size:14px;color:var(--ink);line-height:1.8}
+.pick{background:var(--panel);border:1px solid #3a2f1e;border-radius:var(--radius);padding:10px 12px;margin-bottom:8px;cursor:pointer;transition:border-color .15s}
+.pick:active{border-color:var(--gold-dim)}
+
+/* ======= 全屏幕间(开场/换代/结局) ======= */
+#screen{position:fixed;inset:0;z-index:70;background:var(--bg);display:none;flex-direction:column;align-items:center;justify-content:center;padding:28px 22px;text-align:center;overflow-y:auto}
+#screen.on{display:flex}
+#screen .sc-glyph{font-family:"Kaiti SC","STKaiti","KaiTi",serif;font-size:64px;color:var(--cinnabar);line-height:1;margin-bottom:14px;text-shadow:0 0 30px rgba(192,68,58,.3)}
+#screen .sc-glyph.gold{color:var(--gold-bright);text-shadow:0 0 30px rgba(201,164,85,.35)}
+#screen h1{font-family:"Kaiti SC","STKaiti","KaiTi",serif;font-size:30px;letter-spacing:8px;color:var(--ink);margin-bottom:6px}
+#screen .sc-sub{font-size:13px;color:var(--ink-dim);letter-spacing:2px;margin-bottom:18px}
+#screen .sc-body{font-size:14.5px;color:var(--ink);line-height:2;max-width:480px;text-align:left;white-space:pre-line;margin-bottom:10px}
+#screen .btn{margin-top:18px}
+
+.toast{
+  position:fixed;left:50%;top:64px;transform:translateX(-50%);z-index:80;
+  background:rgba(34,27,19,.95);border:1px solid var(--gold-dim);color:var(--gold-bright);
+  font-size:13px;letter-spacing:1px;padding:8px 16px;border-radius:99px;pointer-events:none;
+  animation:toastin 2.2s ease forwards;white-space:nowrap;max-width:90vw;overflow:hidden;text-overflow:ellipsis;
+}
+@keyframes toastin{0%{opacity:0;transform:translate(-50%,-8px)}12%{opacity:1;transform:translate(-50%,0)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-6px)}}
+
+.notice{max-width:520px;margin:0 auto 12px;background:rgba(192,68,58,.1);border:1px solid #5a3530;border-radius:var(--radius);padding:9px 12px;font-size:12.5px;color:#e0a399;line-height:1.7}
+.notice.gold{background:rgba(201,164,85,.08);border-color:#4a3c22;color:var(--gold-bright)}
+.small-dim{font-size:12px;color:var(--ink-faint);text-align:center;letter-spacing:1px;margin-top:6px}
+@media (prefers-reduced-motion: reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <div id="era-line">
+    <span id="era-name" class="kai">承光元年</span>
+    <span id="era-sub">大雍 · 第一代 · 帝春秋廿二</span>
+  </div>
+  <div id="stats">
+    <div class="stat" id="st-t"><div class="s-label"><span>国库</span><span class="s-glyph">鼎</span></div><div class="s-val">50</div><div class="s-bar"><i></i></div><span class="delta"></span></div>
+    <div class="stat" id="st-p"><div class="s-label"><span>民心</span><span class="s-glyph">民</span></div><div class="s-val">50</div><div class="s-bar"><i></i></div><span class="delta"></span></div>
+    <div class="stat" id="st-m"><div class="s-label"><span>军备</span><span class="s-glyph">戈</span></div><div class="s-val">50</div><div class="s-bar"><i></i></div><span class="delta"></span></div>
+    <div class="stat" id="st-a"><div class="s-label"><span>皇权</span><span class="s-glyph">玺</span></div><div class="s-val">60</div><div class="s-bar"><i></i></div><span class="delta"></span></div>
+  </div>
+</div>
+
+<div id="main">
+  <div class="page on" id="pg-gov"></div>
+  <div class="page" id="pg-court"></div>
+  <div class="page" id="pg-min"></div>
+  <div class="page" id="pg-pal"></div>
+  <div class="page" id="pg-hist"></div>
+</div>
+
+<div id="tabbar">
+  <div class="tab on" data-pg="gov"><span class="t-glyph">政</span>朝政<span class="badge" id="bd-gov"></span></div>
+  <div class="tab" data-pg="court"><span class="t-glyph">堂</span>朝堂<span class="badge" id="bd-court"></span></div>
+  <div class="tab" data-pg="min"><span class="t-glyph">臣</span>众臣<span class="badge" id="bd-min"></span></div>
+  <div class="tab" data-pg="pal"><span class="t-glyph">宫</span>宫闱<span class="badge" id="bd-pal"></span></div>
+  <div class="tab" data-pg="hist"><span class="t-glyph">史</span>史册<span class="badge" id="bd-hist"></span></div>
+</div>
+
+<div id="seal-layer"></div>
+<div id="modal-layer"><div id="modal"></div></div>
+<div id="screen"></div>
+
+<script>
+'use strict';
+/* ============================================================
+   大雍·社稷 — 帝王平衡术
+   单文件网页游戏 · 移动优先 · 无外部依赖
+   ============================================================ */
+
+/* ---------- 工具 ---------- */
+const $=s=>document.querySelector(s);
+const ri=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const pick=arr=>arr[Math.floor(Math.random()*arr.length)];
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const chance=p=>Math.random()<p;
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+/* ---------- 名字库 ---------- */
+const SURNAMES=['崔','卢','郑','王','谢','裴','韦','柳','薛','杜','陈','张','刘','周','吴','沈','许','宋','贺','岑','温','孟','颜','陆','虞','褚','长孙','独孤'];
+const GIVEN1=['承','延','嗣','景','彦','伯','仲','叔','季','子','文','元','德','怀','守','敬','尚','秉','维','宗','廷','希','公','士'];
+const GIVEN2=['业','远','山','川','石','泉','松','龄','年','勋','弼','辅','靖','宁','泰','和','谦','恭','俭','让','直','方','正','节','清','源','明','道','本','真'];
+const GIVEN_SINGLE=['忠','恕','勉','俨','晟','适','贽','坚','肃','准','诰','涉','约','峤','蕴','洎','迥','谌'];
+const EUNUCH_SUR=['高','仇','鱼','程','俱','窦','焦','骆'];
+const EUNUCH_GIVEN=['福安','守忠','延喜','文珍','顺全','怀恩','进朝','志诚','保国','双喜'];
+const ERA1=['永','承','天','景','昭','弘','嘉','瑞','隆','建','泰','咸','宣'];
+const ERA2=['昌','平','宁','和','熙','祚','衡','光','启','统','业','安','治'];
+const TEMPLE_SEQ=['太祖','太宗','高宗','世宗','中宗','显宗','肃宗','代宗','德宗','顺宗','宪宗','穆宗','文宗','武宗','宣宗','懿宗','僖宗','昭宗'];
+const EMPEROR_GIVEN=['绍','晟','恒','治','睿','炎','澈','曜','劭','禛','彻','启','衍','弘','律','湛','烨','顼'];
+const PRINCE_TITLES=['秦王','晋王','齐王','楚王','燕王','赵王','魏王','韩王','吴王','越王'];
+const CONSORT_SUR=['苏','林','何','顾','叶','秦','方','江','邵','钟','花','云'];
+
+const usedNames=new Set();
+function makeName(faction){
+  for(let i=0;i<50;i++){
+    let n;
+    if(faction==='eunuch'){n=pick(EUNUCH_SUR)+pick(EUNUCH_GIVEN);}
+    else{n=pick(SURNAMES)+(chance(.7)?pick(GIVEN1)+pick(GIVEN2):pick(GIVEN_SINGLE));}
+    if(!usedNames.has(n)){usedNames.add(n);return n;}
+  }
+  return pick(SURNAMES)+pick(GIVEN1)+pick(GIVEN2)+'某';
+}
+function makeEra(){return pick(ERA1)+pick(ERA2);}
+
+/* ---------- 派系与官职 ---------- */
+const FACTIONS={
+  gentry:{name:'门阀世族',color:'var(--f-gentry)',hex:'#9d7bbf',desc:'累世公卿，盘根错节'},
+  scholar:{name:'寒门清流',color:'var(--f-scholar)',hex:'#6b9ab3',desc:'科举入仕，以文章气节自许'},
+  eunuch:{name:'内廷宦官',color:'var(--f-eunuch)',hex:'#c08a3e',desc:'近侍天子，手眼通天'},
+  consort:{name:'外戚后党',color:'var(--f-consort)',hex:'#c4708c',desc:'椒房之亲，倚势而起'},
+  army:{name:'边镇武人',color:'var(--f-army)',hex:'#7e9064',desc:'手握重兵，坐镇四方'},
+};
+const FKEYS=Object.keys(FACTIONS);
+/* 各派系可任官的倾向（生成大臣时使用） */
+const OFFICES={
+  chancellor:{name:'宰相',sub:'总领百官，参决万机',stat:null},
+  revenue:{name:'户部尚书',sub:'掌钱粮赋税',stat:'t'},
+  war:{name:'兵部尚书',sub:'掌武选军政',stat:'m'},
+  personnel:{name:'吏部尚书',sub:'掌铨选百官',stat:null},
+  justice:{name:'刑部尚书',sub:'掌刑狱律令',stat:'p'},
+  rites:{name:'礼部尚书',sub:'掌礼乐贡举',stat:'a'},
+  censor:{name:'御史大夫',sub:'掌纠察百官，风闻奏事',stat:null},
+};
+const OKEYS=Object.keys(OFFICES);
+const STAT_NAMES={t:'国库',p:'民心',m:'军备',a:'皇权'};
+const STAT_GLYPH={t:'鼎',p:'民',m:'戈',a:'玺'};
+
+/* ---------- 大臣 ---------- */
+let mid=0;
+function newMinister(faction,opt={}){
+  faction=faction||pick(FKEYS);
+  return {
+    id:++mid, name:makeName(faction), faction,
+    talent:opt.talent??ri(2,9),
+    loyalty:opt.loyalty??ri(35,85),
+    ambition:opt.ambition??ri(10,80),
+    age:opt.age??ri(32,58),
+    office:null,
+  };
+}
+function loyaltyTag(m){
+  if(m.loyalty>=80)return '赤胆忠心';
+  if(m.loyalty>=60)return '恭顺';
+  if(m.loyalty>=40)return '人心难测';
+  return '<span class="tag-warn">暗怀异志</span>';
+}
+function ambitionTag(m){
+  if(m.ambition>=70)return '<span class="tag-warn">野心勃勃</span>';
+  if(m.ambition>=40)return '锐意进取';
+  return '恬淡守分';
+}
+function starStr(t){return '★'.repeat(Math.round(t/2))+'☆'.repeat(5-Math.round(t/2));}
+
+/* ---------- 全局状态 ---------- */
+let S=null;
+function newGame(){
+  usedNames.clear();mid=0;
+  const factions={};
+  factions.gentry={power:ri(50,60),attitude:ri(55,65),plot:0};
+  factions.scholar={power:ri(30,40),attitude:ri(65,75),plot:0};
+  factions.eunuch={power:ri(20,30),attitude:ri(70,80),plot:0};
+  factions.consort={power:ri(15,25),attitude:ri(60,70),plot:0};
+  factions.army={power:ri(40,50),attitude:ri(55,65),plot:0};
+  S={
+    year:0, era:makeEra(), eraYear:0, gen:1,
+    t:55,p:55,m:55,a:62,
+    emperor:{name:'姜'+pick(EMPEROR_GIVEN),age:22,health:ri(75,90),lifespan:ri(46,78),temple:null,reignYears:0,regnant:true},
+    factions,
+    ministers:[],
+    consorts:[], princes:[],
+    empressFaction:null,
+    flags:{regency:null,powerMin:null,puppet:false,prepRule:0,golden:0,warned:{}},
+    memQueue:[], memIdx:0, phase:'memo', actions:1,
+    log:[], cooldown:{}, onceDone:{},
+    score:{years:0,gens:1,golden:0},
+    pendingNext:[],
+  };
+  /* 初始大臣：保证每职位一人 + 候补 */
+  const initF=['gentry','gentry','scholar','scholar','army','eunuch','consort','gentry','scholar','army'];
+  initF.forEach(f=>S.ministers.push(newMinister(f)));
+  const sorted=shuffle(S.ministers.slice());
+  OKEYS.forEach((o,i)=>{assign(sorted[i],o);});
+  /* 开局有一位皇后(外戚来源)与一名幼子可能 */
+  S.consorts.push({name:pick(CONSORT_SUR)+'氏',faction:'consort',rank:'皇后',favor:60});
+  S.empressFaction='consort';
+  addLog(`太祖皇帝晏驾，新帝姜${S.emperor.name[1]}践祚，改元${S.era}。`,'big');
+}
+function assign(m,office){
+  const old=officer(office);
+  if(old)old.office=null;
+  if(m){if(m.office)m.office=null;m.office=office;}
+}
+function officer(office){return S.ministers.find(m=>m.office===office)||null;}
+function fname(k){return FACTIONS[k].name;}
+function fdot(k){return `<span class="fdot" style="background:${FACTIONS[k].hex}"></span>`;}
+
+/* ---------- 史册 ---------- */
+function addLog(text,cls){
+  S.log.push({year:S.year,era:S.era,eraYear:S.eraYear,text,cls:cls||''});
+}
+
+/* ---------- 数值应用 ---------- */
+const lastDelta={t:0,p:0,m:0,a:0};
+function applyFx(fx){
+  const out=[];
+  if(!fx)return out;
+  ['t','p','m','a'].forEach(k=>{
+    if(fx[k]){
+      const before=S[k];
+      S[k]=clamp(S[k]+fx[k],0,100);
+      const d=S[k]-before;
+      if(d!==0){lastDelta[k]=d;out.push({label:STAT_NAMES[k],val:d});}
+    }
+  });
+  if(fx.f){
+    for(const k in fx.f){
+      const [dp,da]=fx.f[k];
+      const F=S.factions[k];
+      if(dp){F.power=clamp(F.power+dp,5,100);out.push({label:fname(k)+'·势力',val:dp});}
+      if(da){F.attitude=clamp(F.attitude+da,0,100);out.push({label:fname(k)+'·恭顺',val:da});}
+    }
+  }
+  if(fx.health){S.emperor.health=clamp(S.emperor.health+fx.health,0,100);out.push({label:'圣体',val:fx.health});}
+  return out;
+}
+
+/* ============================================================
+   奏折事件库
+   hint 自动由 fx 推导；after(S,ctx) 可执行随机后果并返回追加文案
+   ============================================================ */
+function off(k){const m=officer(k);return m?m.name:'有司';}
+function offTalent(k){const m=officer(k);return m?m.talent:3;}
+let fxCollector=null;
+function fxc(fx){const r=applyFx(fx);if(fxCollector)fxCollector.push(...r);return r;}
+
+const EVENTS=[
+
+/* ========== 财政民生 ========== */
+{id:'tax',title:'户部请加两税',src:()=>'户部 · '+off('revenue'),
+ cond:S=>S.t<55,w:3,cool:4,
+ body:()=>`户部尚书${off('revenue')}奏：连岁支用浩繁，府库渐虚。请于江淮诸道加征两税三成，以纾国用。\n然民力已疲，恐伤元气。`,
+ opts:[
+  {txt:'准奏，加征三成',fx:{t:14,p:-10,f:{scholar:[0,-4]}},result:'诏下，江淮加赋。国库稍充，然乡野有怨声。',log:'加征江淮两税。'},
+  {txt:'驳回，命削减宫中用度',fx:{t:5,p:4,a:-4,f:{eunuch:[0,-6]}},result:'帝自减膳撤乐，宫人裁汰三百。中外称颂，内侍多有怨望。',log:'帝自削宫用以纾民力。'},
+  {txt:'命户部清查隐田，向豪族征课',fx:{t:9,p:3,f:{gentry:[-5,-9]}},result:'括隐田数千顷，多为世族所占。豪门侧目，民间称快。',log:'清查隐田，触怒世族。'},
+ ]},
+
+{id:'canal',title:'漕渠淤塞',src:()=>'户部 · '+off('revenue'),
+ cond:S=>true,w:2,cool:6,
+ body:()=>`漕渠年久淤塞，江南粮船滞于途中，京师米价腾贵。${off('revenue')}请发民夫十万疏浚，需钱粮甚巨。`,
+ opts:[
+  {txt:'拨款疏浚，以工代赈',fx:{t:-12,p:8},result:'役夫得食，漕路复通，京师米价立平。',log:'疏浚漕渠，以工代赈。'},
+  {txt:'征发徭役，不予工钱',fx:{t:-3,p:-9},result:'渠成而民怨。役中疫死者众，有司讳而不报。',log:'强征徭役浚渠，民怨。'},
+  {txt:'暂且搁置',fx:{t:-6,p:-4},result:'漕运不济，京师物价日昂，百官私下议论朝廷无为。',log:'漕渠失修，物价腾贵。'},
+ ]},
+
+{id:'salt',title:'盐铁之议',src:'廷议',
+ cond:S=>true,w:2,once:true,
+ body:()=>`富商大贾请开盐铁之禁，岁纳重金；${off('revenue')}则主张官营专卖，利归于上。两议相持，请圣裁。`,
+ opts:[
+  {txt:'官营专卖',fx:{t:12,p:-6,f:{scholar:[3,2]}},result:'盐铁归官，岁入大增。然官盐价高质劣，小民颇苦之。',log:'行盐铁专卖。'},
+  {txt:'许商贾经营，征其税',fx:{t:7,p:4,f:{gentry:[4,3]}},result:'盐路畅通，市井繁盛。豪商与世族往来愈密。',log:'开盐禁而征其税。'},
+ ]},
+
+{id:'coin',title:'私铸恶钱泛滥',src:'京兆府',
+ cond:S=>true,w:2,cool:8,
+ body:()=>`市井之间私铸恶钱泛滥，物价淆乱。查其源头，竟有世族大宅设炉于庄园之内。`,
+ opts:[
+  {txt:'严刑禁绝，连坐铸者',fx:{t:5,p:-4,a:4,f:{gentry:[-4,-5]}},result:'毁炉数十，弃市者百余人。钱法稍清，豪族怀恨。',log:'严禁私铸，连坐百余人。'},
+  {txt:'收恶钱以新钱兑之',fx:{t:-10,p:7},result:'官府吃亏而百姓得利，市面渐安。',log:'以新钱收兑恶钱。'},
+  {txt:'置之不问',fx:{t:-5,f:{gentry:[3,2]}},result:'钱益滥而物益贵，识者忧之。',log:'私铸不禁，钱法大坏。'},
+ ]},
+
+{id:'temple',title:'僧寺侵田',src:()=>'礼部 · '+off('rites'),
+ cond:S=>true,w:2,once:true,
+ body:()=>`天下僧寺四千余所，占田免赋，丁壮避役为僧者众。${off('rites')}奏请沙汰僧尼，收其田产入官。然民间崇佛者甚多。`,
+ opts:[
+  {txt:'大举沙汰，收田充国',fx:{t:16,p:-8,a:3},result:'毁寺逾千，还俗者数万，田产尽入官府。府库为之一充，然乡野颇有怨咒之声。',log:'沙汰僧尼，收寺田入官。'},
+  {txt:'限其规模，徐徐图之',fx:{t:6,p:-2},result:'敕诸州毋得新建寺院，僧额有定。两不得罪，亦两不讨好。',log:'限佛寺规模。'},
+  {txt:'崇奉释教，赐田建寺',fx:{t:-10,p:6,a:2},result:'帝亲幸大寺礼佛，万民瞻仰。清流私议人主佞佛。',log:'帝崇佛，赐田建寺。'},
+ ]},
+
+{id:'palace',title:'请营新宫',src:()=>'内侍省',
+ cond:S=>S.t>40,w:2,cool:10,
+ body:()=>`内侍进言：大内宫室乃前朝旧物，卑湿狭小，不称天子之尊。请发匠役营建新宫，以壮国威。`,
+ opts:[
+  {txt:'大兴土木',fx:{t:-18,p:-8,a:8,f:{eunuch:[3,4]}},result:'新宫巍峨，远近骇叹天家气象。然府库为虚，役夫怨于道。',log:'营建新宫，劳民伤财。'},
+  {txt:'略加修葺即可',fx:{t:-5,a:2},result:'稍葺旧宫，不夺农时。',log:'修葺旧宫。'},
+  {txt:'斥其谄媚，宫室如旧',fx:{p:3,f:{eunuch:[0,-5]}},result:'帝曰："宫室之美，岂如百姓足食。"中外传为美谈。',log:'帝斥营宫之议。'},
+ ]},
+
+{id:'harvest',title:'岁大稔',src:'诸道奏报',
+ cond:S=>S.p>35,w:2,cool:5,
+ body:()=>`今岁风调雨顺，诸道大稔，仓廪充实，谷价甚贱。丰年之利，当何所用？`,
+ opts:[
+  {txt:'增籴入仓，以备凶年',fx:{t:-4,p:6},result:'官府增价收籴，农人得利，义仓皆满。',log:'丰年增籴备荒。'},
+  {txt:'减免明年赋税',fx:{t:-6,p:11},result:'诏免明年田租之半，民间欢呼万岁。',log:'丰年减赋，民心大悦。'},
+  {txt:'扩军备战',fx:{t:-5,m:10,p:-3,f:{army:[3,3]}},result:'以余粮募兵市马，边军气象一新。',log:'借丰年之利扩军。'},
+ ]},
+
+{id:'drought',title:'关内大旱',src:'诸道奏报',
+ cond:S=>true,w:3,cool:4,
+ body:()=>`关内诸州春夏不雨，禾稼尽槁，饥民流散。州县请开仓赈济，并乞蠲免租赋。`,
+ opts:[
+  {txt:'开仓赈济，蠲免租赋',fx:{t:-13,p:12},result:'活民数十万，远近称仁。',log:'旱，开仓赈济。'},
+  {txt:'减赋而不赈粮',fx:{t:-5,p:2},result:'略纾民困，然道殣相望，饿殍载道。',log:'旱，仅减赋税。'},
+  {txt:'命州县自行设法',fx:{p:-12},result:'州县敷衍，流民啸聚山林，渐有盗起。',log:'旱灾不赈，流民为盗。'},
+ ]},
+
+{id:'flood',title:'大河决堤',src:'诸道奏报',
+ cond:S=>true,w:2,cool:5,
+ body:()=>`秋汛暴涨，大河于下游决口，漂没民田庐舍无数，溺死者以千计。`,
+ opts:[
+  {txt:'倾力堵口，赈济灾民',fx:{t:-15,p:10},result:'征发军民昼夜塞决，月余而合龙。灾民感泣。',log:'河决，倾力救灾。'},
+  {txt:'命{justice}查河官贪渎',fx:{t:-8,p:6,a:4},result:'查得河防钱粮多被侵吞，斩河官三人，籍其家以充赈费。',log:'河决，诛贪渎河官。',
+   txtf:S=>`命${off('justice')}查河官贪渎`},
+  {txt:'听其自然，来年再修',fx:{p:-13,t:-4},result:'水退之处尽为泽国，民间谣曰："官仓有粟，不济沟中骨。"',log:'河决不救，民谣怨上。'},
+ ]},
+
+{id:'locust',title:'蝗起山东',src:'诸道奏报',
+ cond:S=>true,w:2,cool:6,
+ body:()=>`山东诸州蝗起，飞则蔽日，落则食苗殆尽。有司以为天谴，请帝修德禳灾；亦有官员请捕而瘗之。`,
+ opts:[
+  {txt:'命官民捕蝗，以蝗易粟',fx:{t:-7,p:8},result:'捕蝗百万石，蝗患遂息。识者叹曰：人定胜天。',log:'捕蝗救灾。'},
+  {txt:'设坛祭天禳灾',fx:{t:-4,p:-6,a:-2},result:'斋醮月余，蝗自食尽而去，田亩已空。',log:'祭天禳蝗，无济于事。'},
+ ]},
+
+{id:'plague',title:'京畿大疫',src:'太医署',
+ cond:S=>true,w:1.5,cool:8,
+ body:()=>`京畿大疫，闾巷之间病者相枕。太医署请拨钱设病坊，施药救治；又请暂禁朝会聚集。`,
+ opts:[
+  {txt:'设病坊施药，暂罢朝会',fx:{t:-10,p:9},result:'病坊收治万人，疫势月余而衰。',log:'大疫，设病坊救治。'},
+  {txt:'驱病者出城',fx:{p:-12,a:-3},result:'病者哀号于野，死相枕藉。疫虽渐息，人心已寒。',log:'大疫，驱病者出城。'},
+ ]},
+
+{id:'refugee',title:'流民聚于京畿',src:'京兆府',
+ cond:S=>S.p<55,w:2,cool:4,
+ body:()=>`各地流民数万扶老携幼，聚于京畿就食。京兆尹请旨：是抚是驱？`,
+ opts:[
+  {txt:'设粥棚安置，募壮者入军',fx:{t:-9,p:7,m:5},result:'流民得食，壮者万人编入军籍，一举两得。',log:'抚流民，募壮丁。'},
+  {txt:'遣返原籍，给路粮',fx:{t:-5,p:1},result:'流民怏怏而返，半数中道复散。',log:'遣返流民。'},
+  {txt:'闭城驱逐',fx:{p:-10},result:'流民转徙他乡，沿途劫掠渐起。',log:'驱逐流民，盗贼渐起。'},
+ ]},
+
+{id:'granary',title:'义仓亏空案',src:()=>'御史台 · '+off('censor'),
+ cond:S=>offTalent('censor')>=4,w:2,cool:6,
+ setup:S=>{const t=pick(S.ministers.filter(m=>!m.office&&m.faction!=='eunuch'))||pick(S.ministers.filter(m=>m.office!=='chancellor'));return{t};},
+ body:(S,c)=>`御史台查得：${c.t?c.t.name:'某官'}族中子弟任仓曹时，盗卖义仓存粮数万石，账册涂改之迹宛然。此人朝中有靠，牵连颇广。`,
+ opts:[
+  {txt:'严查到底，依律处置',fx:{t:6,p:5,a:3},after:(S,c)=>{if(c.t){const f=c.t.faction;fxc({f:{[f]:[-4,-7]}});removeMinister(c.t,'坐赃伏法');return `${c.t.name}坐赃论死，${fname(f)}一系人人自危。`;}return '';},result:'追赃入库，天下知朝廷不容贪墨。',log:'义仓案，严惩贪官。'},
+  {txt:'罚俸了事',fx:{t:2,a:-3,p:-4},result:'高高举起，轻轻放下。御史台诸官摇头叹息。',log:'义仓案轻纵。'},
+ ]},
+
+/* ========== 礼制皇权 ========== */
+{id:'omen',title:'祥瑞迭见',src:()=>'礼部 · '+off('rites'),
+ cond:S=>S.a>45&&S.t>35,w:1.5,cool:8,
+ body:()=>`诸州争献祥瑞：嘉禾合穗，白鹿现于山林，黄河水清三日。${off('rites')}率群臣上表，请封禅泰山，告成功于天地。`,
+ opts:[
+  {txt:'东封泰山',fx:{t:-16,a:12,p:-5},result:'车驾东巡，仪卫千里，登封降禅。天子威仪，震耀寰宇。',log:'封禅泰山，威加海内。'},
+  {txt:'谦辞不受',fx:{a:3,p:3},result:'帝曰："年谷未丰，边备未饬，何功之有？"群臣叹服。',log:'帝谦辞封禅之请。'},
+ ]},
+
+{id:'eclipse',title:'日有食之',src:'太史局',
+ cond:S=>true,w:2,cool:7,
+ body:()=>`日有食之，既。京师昼晦，百姓惶骇。太史奏：日食示警，咎在人主，请帝修省。`,
+ opts:[
+  {txt:'下罪己诏，避殿减膳',fx:{p:8,a:-3},result:'诏书布告天下，自陈阙失。百姓闻之，反多感念。',log:'日食，帝下罪己诏。'},
+  {txt:'归咎宰相，策免之',fx:{a:4,p:-2},after:S=>{const c=officer('chancellor');if(c){const f=c.faction;assign(null,'chancellor');c.office=null;fxc({f:{[f]:[-5,-8]}});return `宰相${c.name}罢为庶官，其党愤愤。`;}return '';},result:'依汉故事，移咎三公。',log:'日食，策免宰相。'},
+  {txt:'斥为常理，不必惊扰',fx:{a:-4},result:'帝曰："日月之行，自有常度。"然民间窃议天子不畏天。',log:'日食，帝不修省。'},
+ ]},
+
+{id:'exam',title:'贡举之争',src:'廷议',
+ cond:S=>true,w:3,cool:5,
+ body:()=>`贡举将开。寒门士子伏阙上书，言考官皆出世族，去取唯凭门第；${off('personnel')}则言取士当重家学渊源，骤进寒素恐乱朝纲。`,
+ opts:[
+  {txt:'糊名誊录，一凭文章',fx:{a:4,f:{scholar:[7,7],gentry:[-5,-7]}},result:'是科寒门登第者过半，天下士子额手相庆。世族哗然。',log:'科举糊名，寒门大进。'},
+  {txt:'维持旧制',fx:{f:{gentry:[5,4],scholar:[-3,-8]}},result:'放榜之日，朱紫之家弹冠相庆，寒士掩卷而泣。',log:'贡举仍重门第。'},
+  {txt:'帝亲御殿策问',fx:{a:7,t:-3,f:{scholar:[4,4],gentry:[-2,-3]}},result:'天子亲擢人才，及第者皆称"天子门生"，恩归于上。',log:'帝亲策贡士，恩归于上。'},
+ ]},
+
+{id:'elder',title:'老臣乞骸骨',src:'表奏',
+ cond:S=>S.ministers.some(m=>m.office&&m.age>=64),w:3,cool:3,
+ setup:S=>({t:S.ministers.find(m=>m.office&&m.age>=64)}),
+ body:(S,c)=>`${OFFICES[c.t.office].name}${c.t.name}年逾六旬，上表乞骸骨："臣犬马之齿已衰，恐尸位误国，乞归田里。"`,
+ opts:[
+  {txt:'准其荣休，厚加赏赐',fx:{t:-4},after:(S,c)=>{const f=c.t.faction;fxc({f:{[f]:[0,4]}});removeMinister(c.t,'荣休还乡');return `${c.t.name}拜谢阙下，朝野称帝厚道。其位暂虚，当择人补任。`;},result:'',log:'老臣荣休。'},
+  {txt:'温诏挽留',after:(S,c)=>{c.t.loyalty=clamp(c.t.loyalty+10,0,100);return `${c.t.name}感激涕零，誓效残年。然其精力确已不济。`;},fx:{},result:'',log:'挽留老臣。'},
+ ]},
+
+{id:'royalkin',title:'宗室横行',src:()=>'刑部 · '+off('justice'),
+ cond:S=>true,w:2,cool:6,
+ body:()=>`宗室子弟纵奴行凶，殴杀平民于市，京兆府不敢问。${off('justice')}冒死奏闻，请依律治罪。`,
+ opts:[
+  {txt:'王子犯法，与庶民同罪',fx:{p:10,a:5,f:{gentry:[0,-3]}},result:'宗室伏法，观者万人，皆呼青天。诸王自此敛迹。',log:'宗室伏法，万民称快。'},
+  {txt:'夺爵幽禁，免其死罪',fx:{p:3,a:1},result:'死者之家得厚恤，物议稍平。',log:'宗室夺爵幽禁。'},
+  {txt:'斥退奏章，家法处置',fx:{p:-9,a:-3,f:{scholar:[0,-5]}},result:'死者家人号哭于衙前，无人敢理。清流寒心。',log:'包庇宗室，清流寒心。'},
+ ]},
+
+{id:'history',title:'请修国史',src:()=>'礼部 · '+off('rites'),
+ cond:S=>S.year>5,w:1,once:true,
+ body:()=>`${off('rites')}奏：太祖创业垂统，功业煌煌，而国史未修，恐岁久湮没。请开史馆，命儒臣撰述。`,
+ opts:[
+  {txt:'开馆修史',fx:{t:-6,a:5,f:{scholar:[3,4]}},result:'史馆既开，海内文士云集京师。', log:'开史馆修国史。'},
+  {txt:'今用兵用钱之际，且缓',fx:{f:{scholar:[0,-3]}},result:'文臣怏怏，谓朝廷重武轻文。',log:'缓修国史。'},
+ ]},
+
+/* ========== 军事边患 ========== */
+{id:'raid',title:'北狄寇边',src:()=>'兵部 · '+off('war'),
+ cond:S=>true,w:3,cool:3,
+ body:S=>`北狄铁骑寇掠边州，杀掠吏民，驱牛马数万而去。边将告急，${off('war')}请旨：战、守、和，伏惟圣裁。`,
+ opts:[
+  {txt:'发兵反击',risky:1,fx:{t:-10},after:S=>{const win=chance(clamp(S.m/130+offTalent('war')/40,0.2,0.85));if(win){fxc({m:6,a:7,p:3,f:{army:[5,4]}});return '王师出塞，大破狄骑于阴山之下，斩获甚众。捷书至京，朝野振奋。';}else{fxc({m:-12,a:-6,p:-5,f:{army:[-3,-4]}});return '王师轻进中伏，损兵折将而还。边地为之骚然。';}},result:'',log:'北狄寇边，发兵反击。'},
+  {txt:'坚壁清野，固守不出',fx:{m:2,p:-5,t:-4},result:'边民内迁，狄骑掠无所得而去。然边地田园尽废。',log:'坚壁清野御狄。'},
+  {txt:'遣使议和，岁致金帛',fx:{t:-12,p:-3,a:-6,m:1,f:{army:[0,-6]}},result:'狄人受币而退。边将愤言："以金帛饲虎，虎终噬人。"',log:'纳币与狄议和。'},
+ ]},
+
+{id:'victory',title:'边将大捷',src:'露布飞捷',
+ cond:S=>S.m>45,w:2,cool:5,
+ setup:S=>({g:S.ministers.find(m=>m.office==='war')||pick(S.ministers.filter(m=>m.faction==='army'))}),
+ body:(S,c)=>`边将出塞千里，大破敌庭，献俘阙下。${c.g?c.g.name+'总领其功，':''}军中威望如日中天，士卒只知有将军，不知有朝廷。`,
+ opts:[
+  {txt:'重赏功臣，加官进爵',fx:{t:-8,m:5,f:{army:[8,7]}},result:'三军感奋，愿为效死。然武人之势愈张。',log:'重赏边功。'},
+  {txt:'召还京师，明升暗夺其兵',fx:{a:5,m:-4,f:{army:[-6,-8]}},after:(S,c)=>{if(c.g){c.g.loyalty=clamp(c.g.loyalty-12,0,100);c.g.ambition=clamp(c.g.ambition+8,0,100);}return '功臣入朝荣养，兵权别授。军中将士愤愤不平。';},result:'',log:'召还功臣，收其兵权。'},
+  {txt:'薄赏之，功高不赏',fx:{f:{army:[-2,-10]}},result:'诏书褒奖数语而已。军中歌曰："将军百战死，赏赐不沾衣。"',log:'边功薄赏，军心怏怏。'},
+ ]},
+
+{id:'warlord',title:'节度使请兼领',src:()=>'兵部 · '+off('war'),
+ cond:S=>S.factions.army.power>40,w:2,cool:5,
+ body:()=>`朔方节度使上表，以"边事一体"为由，请兼领邻镇兵马、自署僚属、就地征赋。${off('war')}言其有功宜抚，${off('censor')}言此例一开，藩镇尾大不掉。`,
+ opts:[
+  {txt:'准其所请',fx:{m:6,f:{army:[9,5]}},result:'一镇而领三军之政，俨然土皇帝矣。诸镇皆有效尤之意。',log:'许节度使兼领，藩镇坐大。'},
+  {txt:'严词拒绝，遣御史巡边',fx:{a:4,f:{army:[-5,-7]}},result:'诏旨切责，节度使惶恐谢罪，然心中怨望可知。',log:'拒藩镇兼领之请。'},
+  {txt:'调其入朝为尚书，分镇为三',risky:1,fx:{},after:S=>{if(chance(clamp(S.a/110,0.25,0.8))){fxc({a:8,f:{army:[-10,-3]}});return '明诏褒升，节度使不敢抗命，入朝就职。边镇一分为三，互相牵制。庙堂之上，皆服圣算。';}else{fxc({a:-8,m:-6,f:{army:[5,-10]}});return '节度使称病不行，拥兵自固，朝廷竟无如之何。藩镇之祸，自此始矣。';}},result:'',log:'削藩之策。'},
+ ]},
+
+{id:'mutiny',title:'戍卒哗变',src:'六百里加急',
+ cond:S=>S.t<30||S.m<35,w:3,cool:4,
+ body:()=>`边镇粮饷积欠，戍卒鼓噪哗变，杀监军使，劫府库，推牙将为帅，扬言"但求一饱"。`,
+ opts:[
+  {txt:'发饷抚之，赦胁从',fx:{t:-12,m:3,f:{army:[2,5]}},result:'乱卒得饷而定，唯诛首恶数人。然"哗变得饷"之例一开，诸军侧目。',log:'戍卒哗变，发饷抚定。'},
+  {txt:'调兵进剿，以儆效尤',risky:1,fx:{t:-6},after:S=>{if(chance(clamp(S.m/120+0.2,0.3,0.8))){fxc({m:-3,a:6,f:{army:[-4,-5]}});return '官军压境，乱卒势穷出降，诛其魁首三百人。诸镇凛然。';}else{fxc({m:-10,p:-6,a:-5});return '进剿失利，乱卒流窜数州，所过残破。';}},result:'',log:'进剿哗变戍卒。'},
+ ]},
+
+{id:'heqin',title:'狄使请婚',src:'鸿胪寺',
+ cond:S=>true,w:1.5,cool:8,
+ body:()=>`北狄可汗遣使奉表，愿娶公主，永结舅甥之好。许之则边境暂安，拒之恐启边衅。`,
+ opts:[
+  {txt:'许嫁宗室女，封公主',fx:{t:-8,m:4,p:2,a:-4},result:'公主和亲出塞，边境数年无事。然有诗传于民间："汉家青史上，计拙是和亲。"',log:'和亲北狄。'},
+  {txt:'拒之',fx:{a:5,m:-3,f:{army:[2,2]}},result:'帝曰："堂堂天朝，岂以女子安边！"狄使悻悻而去，边将厉兵秣马。',log:'拒狄和亲之请。'},
+ ]},
+
+{id:'tribute',title:'万邦来朝',src:'鸿胪寺',
+ cond:S=>S.a>50,w:1.5,cool:6,
+ body:()=>`海东、南诏、西域诸国使节来朝，献方物于阙下。鸿胪寺请定回赐之数：厚往薄来以示天朝气度，抑或称价回赐以省国用？`,
+ opts:[
+  {txt:'厚往薄来，彰天朝气象',fx:{t:-9,a:8},result:'诸国使者满载而归，争颂天可汗之德。四夷宾服。',log:'厚赐诸国来使。'},
+  {txt:'平价互市',fx:{t:4,a:-2},result:'使节略有怏色，然贸易之利实惠边民。',log:'与诸国平价互市。'},
+ ]},
+
+{id:'wall',title:'请缮边塞',src:()=>'兵部 · '+off('war'),
+ cond:S=>S.m<60,w:2,cool:6,
+ body:()=>`${off('war')}奏：缘边亭障多有颓圮，烽燧不修，虏骑出入如履平地。请发卒缮治，增置戍堡。`,
+ opts:[
+  {txt:'拨款大修',fx:{t:-13,m:11},result:'边墙连堡，烽火相望，边备为之一振。',log:'大修边塞。'},
+  {txt:'择要害处修补',fx:{t:-6,m:5},result:'财力有限，且保关隘无虞。',log:'择要修缮边备。'},
+  {txt:'国用不足，暂罢',fx:{m:-5,f:{army:[0,-4]}},result:'边将叹曰："朝廷之钱，不肯花在刀刃上。"',log:'罢修边备。'},
+ ]},
+
+{id:'defeat',title:'边军失利',src:'败报',
+ cond:S=>S.m<40,w:2.5,cool:4,
+ body:()=>`边军与虏战于野，大败，亡失辎重无数，一城陷没。败报至京，中外震动。`,
+ opts:[
+  {txt:'斩败将以正军法',fx:{a:4,m:-2,f:{army:[-3,-7]}},result:'败将传首九边。军法肃然，然将士寒心：胜则功归监军，败则罪在主将。',log:'斩败将。'},
+  {txt:'下诏罪己，抚恤死事',fx:{p:6,m:4,a:-2,t:-6},result:'诏书哀痛深切，阵亡之家皆得抚恤。军民感泣，誓雪国耻。',log:'兵败，帝罪己抚恤。'},
+  {txt:'增兵增饷，誓师复仇',fx:{t:-14,m:9,f:{army:[4,3]}},result:'倾国之力以饷军，边军气势复振。',log:'增兵备战复仇。'},
+ ]},
+
+{id:'vassal',title:'西域请内附',src:'鸿胪寺',
+ cond:S=>S.m>55&&S.a>50,w:1,cool:10,
+ body:()=>`西域三国遣子入侍，请置都护，举国内附。纳之则威加万里，然驻军万里之外，糜费亦巨。`,
+ opts:[
+  {txt:'置都护府，纳其内附',fx:{t:-10,a:9,m:3},result:'都护开府西域，商路大通，天朝声威远播流沙之外。',log:'置西域都护。'},
+  {txt:'受其朝贡，不驻兵',fx:{a:3,t:2},result:'羁縻而已，省却无穷之费。',log:'羁縻西域。'},
+ ]},
+
+/* ========== 派系倾轧 ========== */
+{id:'impeach',title:'御史劾相',src:()=>'御史台 · '+off('censor'),
+ cond:S=>officer('chancellor')&&officer('censor')&&officer('chancellor').faction!==officer('censor').faction,w:2.5,cool:4,
+ setup:S=>({c:officer('chancellor'),y:officer('censor')}),
+ body:(S,c)=>`御史大夫${c.y.name}当廷劾奏宰相${c.c.name}十罪：植党营私、卖官鬻爵、蔽塞言路……宰相免冠顿首，自辩不已。满朝屏息，皆望御座。`,
+ opts:[
+  {txt:'罢宰相，付有司勘问',fx:{a:5},after:(S,c)=>{const f=c.c.faction;assign(null,'chancellor');fxc({f:{[f]:[-8,-9],[c.y.faction]:[4,3]}});c.c.loyalty=clamp(c.c.loyalty-25,0,100);return `${c.c.name}罢相下狱，其党羽人人自危。相位虚悬，当速择贤补任。`;},result:'',log:'御史劾相，宰相罢职。'},
+  {txt:'各打五十大板',fx:{a:2},after:(S,c)=>{c.y.loyalty=clamp(c.y.loyalty-8,0,100);fxc({f:{[c.y.faction]:[0,-4],[c.c.faction]:[0,-3]}});return '诏曰：宰相罚俸自省，御史风闻失实，亦夺俸三月。两家之怨，自此愈深。';},result:'',log:'相、宪互讦，各罚俸。'},
+  {txt:'斥御史诬告，贬出京师',fx:{a:-5},after:(S,c)=>{const yf=c.y.faction;assign(null,'censor');fxc({f:{[yf]:[-4,-10],[c.c.faction]:[5,4]}});removeMinister(c.y,'贬谪出京');return `${c.y.name}贬为远州司马，朝中言路为之一塞。宰相之势愈固。`;},result:'',log:'贬御史，言路塞。'},
+ ]},
+
+{id:'marriage',title:'门阀禁婚之议',src:'廷议',
+ cond:S=>S.factions.gentry.power>45,w:2,cool:7,
+ body:()=>`数姓世族自矜门第，私定婚册，不与寒族通婚，嫁娶之间陪门财动以百万计。寒门官员愤而上书，请禁卖婚、毁私册。`,
+ opts:[
+  {txt:'下诏禁卖婚，毁其谱册',fx:{a:5,f:{gentry:[-7,-8],scholar:[4,5]}},result:'诏下，世族阳奉阴违，然其凌驾国法之气焰为之一挫。',log:'禁世族卖婚。'},
+  {txt:'婚姻私事，朝廷不问',fx:{f:{gentry:[4,3],scholar:[-2,-5]}},result:'世族弹冠相庆，门第之见愈深。民间嫁女竞效陪门财，风俗为之一变。',log:'不禁世族私婚。'},
+ ]},
+
+{id:'eunuch_monitor',title:'请置监军',src:'内侍省',
+ cond:S=>S.factions.eunuch.power>25,w:2,cool:6,
+ body:()=>`内侍密奏：边将拥兵于外，朝廷耳目不及，恐有不测之变。请遣中官出任监军，察将帅动静，直奏御前。`,
+ opts:[
+  {txt:'准奏，遣中官监军',fx:{a:3,m:-4,f:{eunuch:[7,5],army:[-3,-8]}},result:'中官持节赴军。将帅掣肘，士卒侧目，然兵权确归于上。',log:'遣宦官监军。'},
+  {txt:'以御史代行监察',fx:{f:{scholar:[4,3],eunuch:[0,-5]}},result:'御史巡边，文法监军。内侍失此一着，颇为怏怏。',log:'以御史巡边代监军。'},
+  {txt:'用人不疑，皆不遣',fx:{f:{army:[3,6],eunuch:[0,-4]}},result:'边将感激："主上以国士待我。"然兵柄在外，祸福难知。',log:'不遣监军，推诚边将。'},
+ ]},
+
+{id:'consort_office',title:'后族求官',src:'中宫',
+ cond:S=>S.consorts.length>0,w:2,cool:5,
+ body:S=>`${S.consorts[0].rank}之兄于禁中赐宴时再拜求官，愿领禁军或户部要职。椒房之亲，却之伤情，授之养虎。`,
+ opts:[
+  {txt:'授以实职',fx:{f:{consort:[9,7]}},after:S=>{const m=newMinister('consort',{loyalty:ri(50,75),ambition:ri(45,85)});S.ministers.push(m);return `后兄${m.name}入朝任事，外戚之门，车马骈阗。`;},result:'',log:'授后族实职。'},
+  {txt:'封侯而不任事',fx:{t:-5,f:{consort:[2,3]}},result:'锡以爵禄，不予事权。后族稍慰，亦无大患。',log:'封外戚虚爵。'},
+  {txt:'正色拒之',fx:{a:3,f:{consort:[-3,-8]}},result:'帝曰："官爵者天下公器，岂可私授。"中宫闻之垂泪。',log:'拒外戚求官。'},
+ ]},
+
+{id:'partyfight',title:'朋党廷争',src:'廷议',
+ cond:S=>{const f=topFactions();return f[0].power-f[1].power<15&&f[0].power>40;},w:2.5,cool:4,
+ setup:S=>{const f=topFactions();return{a:f[0].key,b:f[1].key};},
+ body:(S,c)=>`${fname(c.a)}与${fname(c.b)}因铨选之事当廷相争，至于攘袂诟詈，几欲挥拳。两派各上弹章数十道，朝政为之停滞。`,
+ opts:[
+  {txt:'各贬首事者，以平党争',fx:{a:6},after:(S,c)=>{fxc({f:{[c.a]:[-5,-4],[c.b]:[-5,-4]}});return '两派魁首各贬一级，朝堂暂安。然党人之争，岂能以一贬了之。';},result:'',log:'廷争，两派各贬首事。'},
+  {txt:'偏袒势大一方',after:(S,c)=>{fxc({f:{[c.a]:[6,5],[c.b]:[-5,-9]},a:-3});return `圣意既明，${fname(c.b)}诸官纷纷称病不朝。`;},fx:{},result:'',log:'党争，帝有所偏袒。'},
+  {txt:'偏袒势弱一方以制衡',after:(S,c)=>{fxc({f:{[c.b]:[6,4],[c.a]:[-5,-6]},a:2});return `帝抑强扶弱，${fname(c.a)}悚然，始知圣心难测。`;},fx:{},result:'',log:'党争，帝抑强扶弱。'},
+ ]},
+
+{id:'corrupt',title:'大臣纳贿案',src:()=>'御史台 · '+off('censor'),
+ cond:S=>offTalent('censor')>=3&&S.ministers.filter(m=>m.office&&m.office!=='censor').length>2,w:2,cool:4,
+ setup:S=>({t:pick(S.ministers.filter(m=>m.office&&m.office!=='censor'&&m.loyalty<70))||pick(S.ministers.filter(m=>m.office&&m.office!=='censor'))}),
+ body:(S,c)=>`御史台廉得：${OFFICES[c.t.office].name}${c.t.name}受方镇之赂，金宝累万。人赃俱在，然其在朝多年，门生故吏遍布。`,
+ opts:[
+  {txt:'罢官抄家，赃银入库',fx:{t:9,a:4,p:4},after:(S,c)=>{const f=c.t.faction;fxc({f:{[f]:[-6,-8]}});removeMinister(c.t,'坐赃抄家');return `${c.t.name}削职为民，家产籍没。${fname(f)}群情汹汹，谓帝鸟尽弓藏。`;},result:'',log:'重惩纳贿大臣。'},
+  {txt:'降职留用，命其自新',fx:{a:-2},after:(S,c)=>{c.t.loyalty=clamp(c.t.loyalty+15,0,100);return `${c.t.name}免冠泣谢不杀之恩。此人自此感恩，然贪性难移。`;},result:'',log:'纳贿者降职留用。'},
+  {txt:'毁去案卷，不予追究',fx:{a:-4,p:-3,f:{scholar:[0,-5]}},after:(S,c)=>{c.t.loyalty=clamp(c.t.loyalty+8,0,100);c.t.ambition=clamp(c.t.ambition+8,0,100);return '案卷封存。御史台官员相顾无言。';},result:'',log:'贪案不究，言官齿冷。'},
+ ]},
+
+{id:'suppress_eunuch',title:'清流请抑宦官',src:'联名劾章',
+ cond:S=>S.factions.eunuch.power>45,w:2.5,cool:4,
+ body:()=>`谏官联名上书：中官气焰日炽，宫市强买，干预政事，渐成腹心之患。请尽罢宦官兵权、外任，以绝祸源。`,
+ opts:[
+  {txt:'依奏裁抑宦官',fx:{a:3,p:4,f:{eunuch:[-10,-10],scholar:[4,5]}},result:'罢宫市、收兵权，中官气焰顿挫。然内廷之中，怨毒暗结。',log:'裁抑宦官。'},
+  {txt:'略加约束，以安其心',fx:{f:{eunuch:[-3,0],scholar:[0,-3]}},result:'小惩大诫而已。谏官叹曰："养痈终将遗患。"',log:'略约束宦官。'},
+  {txt:'斥谏官离间君侧',fx:{a:-3,f:{eunuch:[6,6],scholar:[-4,-9]}},result:'谏官夺职者三人。自此言事者稀，宦寺弹冠。',log:'斥退谏官，宦官愈炽。'},
+ ]},
+
+{id:'eunuch_guard',title:'中官请典禁军',src:'内侍省',
+ cond:S=>S.factions.eunuch.power>55,w:2.5,cool:5,
+ body:()=>`内侍省首领密奏：外朝将帅皆有派系，禁军付之，恐有肘腋之变。中官乃陛下家奴，无家无后，最为可信。请以中官典掌禁军。`,
+ opts:[
+  {txt:'准奏',fx:{a:-4,f:{eunuch:[10,4],army:[-5,-7],scholar:[0,-6]}},result:'神策兵符归于内侍。自此宫禁之权，操于阉宦之手。识者私叹：此非国家之福。',log:'宦官典禁军。'},
+  {txt:'禁军当用武臣',fx:{f:{eunuch:[-4,-6],army:[4,4]}},result:'内侍悻然而退。',log:'拒宦官典兵之请。'},
+ ]},
+
+{id:'gentry_land',title:'世族兼并',src:()=>'户部 · '+off('revenue'),
+ cond:S=>S.factions.gentry.power>55,w:2.5,cool:5,
+ body:()=>`${off('revenue')}泣奏：世族庄园连州跨郡，荫庇佃客数十万，皆不入国家版籍。富者田连阡陌，贫者无立锥之地，租赋日蹙。`,
+ opts:[
+  {txt:'行检田括户之法',risky:1,fx:{},after:S=>{if(chance(clamp(S.a/120+0.25,0.3,0.85))){fxc({t:14,p:6,f:{gentry:[-9,-10]}});return '检括天下隐户八十万，岁入大增。世族切齿，而国本为之一固。';}else{fxc({a:-7,p:-4,f:{gentry:[3,-8]}});return '括户使所至，世族煽动佃客抗命，数州骚然，事竟不行。朝廷威信大损。';}},result:'',log:'检田括户。'},
+  {txt:'限田之议，徐徐图之',fx:{t:4,f:{gentry:[-3,-3]}},result:'立限田之制而不溯既往。聊胜于无。',log:'颁限田令。'},
+  {txt:'本朝与士族共天下，不问',fx:{f:{gentry:[5,5]},t:-5,p:-4},result:'世族益骄，国课益虚。',log:'纵容世族兼并。'},
+ ]},
+
+/* ========== 宫闱储位 ========== */
+{id:'select',title:'礼部请选淑女',src:()=>'礼部 · '+off('rites'),
+ cond:S=>S.consorts.length<4&&S.emperor.age<52&&!S.flags.regency,w:2,cool:4,
+ body:()=>`${off('rites')}奏：广嗣续、固国本，王者之大计也。请采选良家淑女，充实后宫。各家闻风而动，皆欲送女入宫，以图亲贵。`,
+ opts:[
+  {txt:'选世族之女',fx:{t:-5,f:{gentry:[5,5]}},after:S=>{addConsort('gentry');return '崔氏女入宫为妃。世族与天家联姻，愈见尊荣。';},result:'',log:'纳世族女为妃。'},
+  {txt:'选将门之女',fx:{t:-5,f:{army:[5,5]}},after:S=>{addConsort('army');return '将门虎女入宫。边将闻之，与有荣焉。';},result:'',log:'纳将门女为妃。'},
+  {txt:'选寒素清白之家',fx:{t:-4,p:3,f:{scholar:[3,3]}},after:S=>{addConsort('scholar');return '良家女以德容入选。清流称颂帝不重门第。';},result:'',log:'纳寒门女为妃。'},
+  {txt:'后宫已足，不选',fx:{p:2,t:1},result:'诏罢采选，民间不扰。',log:'罢选淑女。'},
+ ]},
+
+{id:'tutor',title:'皇子开蒙',src:()=>'礼部 · '+off('rites'),
+ cond:S=>S.princes.some(p=>p.age>=6&&p.age<=12&&!p.tutored),w:2.5,cool:2,
+ setup:S=>({p:S.princes.find(p=>p.age>=6&&p.age<=12&&!p.tutored)}),
+ body:(S,c)=>`皇${c.p.crown?'太子':'子'}${c.p.name}年已${c.p.age}岁，当延师开蒙。师傅人选，关乎储贰他日之器识，各方皆欲进其人。`,
+ opts:[
+  {txt:'延清流大儒为师',after:(S,c)=>{c.p.tutored=1;c.p.talent=clamp(c.p.talent+ri(1,2),1,10);fxc({f:{scholar:[3,4]}});return `名儒入侍讲读，${c.p.name}日诵经史，颇有进益。`;},fx:{},result:'',log:'皇子师从清流大儒。'},
+  {txt:'命世族名士教之',after:(S,c)=>{c.p.tutored=1;c.p.talent=clamp(c.p.talent+1,1,10);fxc({f:{gentry:[4,3]}});return `世家名士为师，${c.p.name}兼习礼法门风，与诸世族子弟为友。`;},fx:{},result:'',log:'皇子师从世族名士。'},
+  {txt:'使习骑射兵法',after:(S,c)=>{c.p.tutored=1;c.p.health=clamp(c.p.health+10,0,100);fxc({f:{army:[3,3]}});return `${c.p.name}晨昏弓马，体魄日健，颇有英武之气。`;},fx:{},result:'',log:'皇子习武。'},
+ ]},
+
+{id:'urge_heir',title:'群臣请建储',src:'联名表奏',
+ cond:S=>!S.princes.some(p=>p.crown)&&S.princes.some(p=>p.age>=8)&&S.emperor.age>=35,w:3,cool:3,
+ body:S=>`宰臣率百官伏阙上书："国本未立，人心浮动。储位早定，则觊觎之心绝，社稷之基固。"伏请早建东宫。`,
+ opts:[
+  {txt:'纳谏，往宫闱择立太子',fx:{a:2},result:'帝颔首："卿等所言是也。"（请至【宫闱】页册立太子）',log:'群臣请建储。'},
+  {txt:'朕春秋鼎盛，此事再议',fx:{a:-3,f:{scholar:[0,-3]}},after:S=>{S.princes.forEach(p=>{if(p.age>=14)p.scheming=(p.scheming||0)+1;});return '群臣怏怏而退。诸皇子身边，各色人等渐渐聚集。';},result:'',log:'帝拒建储之请。'},
+ ]},
+
+{id:'harem',title:'后宫倾轧',src:'内侍密报',
+ cond:S=>S.consorts.length>=2&&S.princes.length>=1,w:2,cool:5,
+ setup:S=>({a:S.consorts[0],b:S.consorts[S.consorts.length-1],p:pick(S.princes)}),
+ body:(S,c)=>`内侍密报：${c.b.rank}${c.b.name}指使宫人于${c.a.rank}${c.a.name}饮食中行厌胜之术，又散布流言，谓皇子${c.p.name}非帝骨血。后宫汹汹，渐及外朝。`,
+ opts:[
+  {txt:'彻查严办，废行术者',after:(S,c)=>{const f=c.b.faction;S.consorts=S.consorts.filter(x=>x!==c.b);fxc({a:4,f:{[f]:[-4,-8]}});return `${c.b.name}废为庶人，幽于冷宫。后宫肃然，而${fname(f)}怀怨。`;},fx:{},result:'',log:'废行厌胜之妃。'},
+  {txt:'各申斥之，大事化小',fx:{a:-2},after:(S,c)=>{if(chance(.35)&&S.princes.length){const p=c.p;p.health=clamp(p.health-25,0,100);return `两宫表面相安。然数月后，皇子${p.name}忽染怪疾，缠绵病榻……`;}return '两宫表面相安，暗潮依旧。';},result:'',log:'后宫之争，含糊了事。'},
+ ]},
+
+{id:'empress_pol',title:'中宫预政',src:()=>'御史台 · '+off('censor'),
+ cond:S=>S.factions.consort.power>45&&S.consorts.length>0,w:2.5,cool:5,
+ body:S=>`御史奏：${S.consorts[0].rank}近日常于帘后听政，批答章奏，外朝除授有出于中宫之意者。牝鸡司晨，惟家之索，请陛下明察。`,
+ opts:[
+  {txt:'严禁后宫干政',fx:{a:5,f:{consort:[-8,-8]}},result:'诏：中宫止预祭祀内事，政事勿得与闻。凤仪殿中，垂泪终日。',log:'禁中宫预政。'},
+  {txt:'皇后贤明，何妨佐朕',fx:{a:-5,f:{consort:[8,5],scholar:[0,-5]}},result:'中宫之权愈重，外戚之门愈盛。史官直书："政由帷幄。"',log:'中宫预政如故。'},
+ ]},
+
+{id:'succ_fight',title:'夺嫡之祸',src:()=>'御史台 · '+off('censor'),
+ cond:S=>S.princes.filter(p=>p.age>=15).length>=2&&!S.princes.some(p=>p.crown),w:3,cool:3,
+ setup:S=>{const ps=S.princes.filter(p=>p.age>=15);return{a:ps[0],b:ps[1]};},
+ body:(S,c)=>`储位久虚，${c.a.name}与${c.b.name}各结朝臣，门下宾客如市，互相倾陷，甚有"玄武门"之私语流于坊间。祸在萧墙，不可不察。`,
+ opts:[
+  {txt:'立长，断绝纷争',after:(S,c)=>{setCrown(c.a);fxc({a:4});if(c.b)c.b.scheming=(c.b.scheming||0)+2;return `立${c.a.name}为太子，名分既定。${c.b.name}杜门谢客，然其心中之火，未必已熄。`;},fx:{},result:'',log:'立长为储以息夺嫡。'},
+  {txt:'立贤，择才而立',after:(S,c)=>{const best=[c.a,c.b].sort((x,y)=>y.talent-x.talent)[0];const loser=best===c.a?c.b:c.a;setCrown(best);fxc({a:2});if(loser)loser.scheming=(loser.scheming||0)+3;return `立${best.name}为太子。${loser.name}愤然："立嫡立长，古之制也，今何独废？"`;},fx:{},result:'',log:'立贤为储。'},
+  {txt:'各杖其宾客，敲山震虎',fx:{a:3},after:(S,c)=>{c.a.scheming=0;c.b.scheming=0;return '诸皇子门下宾客各杖逐之。皇子惶恐请罪，争储之势稍敛。';},result:'',log:'杖逐皇子宾客。'},
+ ]},
+
+{id:'sick',title:'圣体违和',src:'太医署',
+ cond:S=>S.emperor.health<40,w:4,cool:2,
+ body:S=>`陛下连日不豫，${S.emperor.health<25?'药石罔效，太医束手':'太医请静养勿劳'}。朝野闻之，人心浮动${S.princes.some(p=>p.crown)?'':'，皆因储位未定而忧'}。`,
+ opts:[
+  {txt:'静养调摄，命太子/宰相理政',fx:{health:12,a:-5},after:S=>{const c=officer('chancellor');if(c)fxc({f:{[c.faction]:[4,0]}});return '帝深居调养，政事委于臣下。圣体渐安，而权柄旁移。';},result:'',log:'帝养疾，权委臣下。'},
+  {txt:'强撑临朝，不示人以弱',fx:{health:-8,a:4},result:'帝力疾视朝，群臣望见御容清减，无不感动，亦无人敢生异心。',log:'帝抱病临朝。'},
+  {txt:'访求方士金丹',risky:1,fx:{t:-6},after:S=>{if(chance(.4)){fxc({health:18});return '丹药入腹，竟觉精力复振。方士赏赐巨万。';}else{fxc({health:-15});return '金石之药燥烈伤身，服后烦热呕血，圣躬愈危。';}},result:'',log:'帝服方士金丹。'},
+ ]},
+
+/* ========== 危机事件 ========== */
+{id:'unrest',title:'民变四起',src:'诸道告急',
+ cond:S=>S.p<32,w:4,cool:2,
+ body:()=>`赋繁役重，民不聊生。数州饥民揭竿而起，攻劫县邑，杀官吏，开仓自赈，旬日之间众至数万。`,
+ opts:[
+  {txt:'剿抚并用：赦胁从，诛首恶',fx:{t:-8,p:8,m:-2},result:'官军压境而招抚先行，乱民多解甲归田。元气虽伤，根本未摇。',log:'民变，剿抚并用。'},
+  {txt:'大军进剿，铁腕镇压',risky:1,fx:{t:-10},after:S=>{if(chance(clamp(S.m/110,0.25,0.85))){fxc({p:-6,m:-3,a:5});return '大军所至，乱者授首。然杀戮过重，野有积怨。';}else{fxc({p:-10,m:-8,a:-6});return '官军屡为乱民所败，贼势愈炽，蔓延数道！';}},result:'',log:'民变，大军镇压。'},
+  {txt:'下诏减赋，罢苛政',fx:{t:-9,p:12,a:-2},result:'诏书所至，乱民相顾曰："赋既减矣，吾曹何为者？"多自散去。',log:'民变，减赋安民。'},
+ ]},
+
+{id:'rebellion',title:'大泽烽火',src:'八百里加急',
+ cond:S=>S.p<16,w:6,cool:2,
+ body:()=>`妖人以谶纬惑众，称"苍天已死"，举事于大泽，旬月间连陷州郡，众号数十万，兵锋直指京畿！社稷存亡，在此一举。`,
+ opts:[
+  {txt:'倾国之兵决战',risky:1,fx:{t:-15},after:S=>{if(chance(clamp(S.m/100+S.factions.army.attitude/400,0.2,0.8))){fxc({p:6,m:-8,a:8,f:{army:[6,3]}});return '官军浴血苦战，终破贼于京郊，传首四方。社稷转危为安，然天下已残破矣。';}else{fxc({p:-10,m:-15,a:-12});return '官军大溃！京师戒严，宗庙震动，亡国之祸，近在眉睫……';}},result:'',log:'大起义，倾国决战。'},
+  {txt:'许诸镇自募兵勇讨贼',fx:{m:5,a:-10,f:{army:[12,2]}},result:'诏下，诸镇竞起兵马。贼势虽渐被遏制，而藩镇自此各拥强兵，朝廷号令，渐不出都门。',log:'许藩镇募兵讨贼。'},
+ ]},
+
+{id:'arrears',title:'百官请俸',src:'百官联名',
+ cond:S=>S.t<22,w:4,cool:3,
+ body:()=>`国库匮竭，京官俸料积欠数月。郎官有质衣而食者。百官联名上书请俸，言辞渐有怨怼之意。`,
+ opts:[
+  {txt:'变卖宫中珍玩补发',fx:{t:6,a:-3,p:3},result:'内府珍宝出市易钱，俸料补发。百官感愧交集。',log:'卖宫藏补俸。'},
+  {txt:'向世族富商借贷',fx:{t:12,f:{gentry:[6,3]}},result:'豪门慨然输财——自然不是白输的。朝廷自此欠下的，不止是钱。',log:'向豪族借贷。'},
+  {txt:'再欠一欠',fx:{a:-5},after:S=>{S.ministers.forEach(m=>m.loyalty=clamp(m.loyalty-6,0,100));return '官不聊生，则贪墨者众，怀贰者生。';},result:'',log:'拖欠百官俸料。'},
+ ]},
+
+{id:'contempt',title:'朝仪不肃',src:()=>'御史台 · '+off('censor'),
+ cond:S=>S.a<32,w:4,cool:2,
+ body:()=>`今日大朝会，有大臣交头接耳，嬉笑自若；宣诏之时，竟有称病不至者。天子威权之轻，于斯可见。`,
+ opts:[
+  {txt:'廷杖失仪者，整肃纲纪',fx:{a:8},after:S=>{const f=pick(FKEYS);fxc({f:{[f]:[0,-6]}});return `杖责数人，朝堂肃然。然怨望者私语："此衰世之政也。"`;},result:'',log:'廷杖整肃朝仪。'},
+  {txt:'优容不问',fx:{a:-6},result:'人主之柄，又轻一分。',log:'朝仪废弛，帝不问。'},
+ ]},
+
+{id:'borderrot',title:'武备废弛',src:()=>'兵部 · '+off('war'),
+ cond:S=>S.m<30,w:4,cool:3,
+ body:()=>`兵部检阅京营：兵籍十万，实存六万，余皆吃空饷之虚额；甲胄朽坏，士不识旗鼓。一旦有警，何以为战？`,
+ opts:[
+  {txt:'彻查空饷，汰弱补强',fx:{t:5,m:10,f:{army:[-4,-6]}},result:'查革虚额三万，所省之饷尽充军实。诸将多有不安。',log:'清查空饷，整军经武。'},
+  {txt:'增拨军费练兵',fx:{t:-13,m:12,f:{army:[3,4]}},result:'厚饷精练，军容渐振。',log:'增饷练兵。'},
+ ]},
+
+/* ========== 权臣事件链 ========== */
+{id:'pmin1',title:'相府如市',src:'风闻',
+ cond:S=>!!S.flags.powerMin,w:6,cool:2,
+ setup:S=>({pm:S.flags.powerMin}),
+ body:(S,c)=>`宰相${c.pm.name}权倾朝野：百官除授，先谒相府而后闻于上；四方贡献，入相门者半。每入朝，赞拜不名，剑履上殿，群臣莫敢仰视。`,
+ opts:[
+  {txt:'下诏罢相',risky:1,fx:{},after:(S,c)=>resolveOust(c.pm),result:'',log:'罢黜权相之诏。'},
+  {txt:'扶植对立派系以制衡',fx:{a:-2},after:(S,c)=>{const ks=FKEYS.filter(k=>k!==c.pm.faction);const k=ks.sort((x,y)=>S.factions[y].power-S.factions[x].power)[0];fxc({f:{[k]:[8,4],[c.pm.faction]:[-3,0]}});return `帝阴擢${fname(k)}之人居要职，使与相党相持。朝中遂成两虎之局。`;},result:'',log:'扶植派系制衡权相。'},
+  {txt:'隐忍不发，麻痹其心',fx:{a:-4},after:(S,c)=>{c.pm.ambition=clamp(c.pm.ambition-5,0,100);S.flags.prepRule+=1;return '帝愈恭谨，赏赐愈厚。权相之心稍懈，而陛下暗中之布置，又深一层。（积蓄+1）';},result:'',log:'帝隐忍以待时。'},
+ ]},
+
+{id:'pmin2',title:'请加九锡',src:'百官劝进',
+ cond:S=>!!S.flags.powerMin&&S.a<40,w:7,cool:3,
+ setup:S=>({pm:S.flags.powerMin}),
+ body:(S,c)=>`百官联名上表，请加宰相${c.pm.name}九锡之礼，赞拜不名，入朝不趋。表章之上，墨迹未干——此乃篡逆之阶，王莽、曹操故事，陛下不可不知！`,
+ opts:[
+  {txt:'断然拒绝，孤注一掷罢相',risky:1,fx:{},after:(S,c)=>resolveOust(c.pm,true),result:'',log:'拒九锡，罢权相。'},
+  {txt:'暂允之，以骄其志',fx:{a:-8},after:(S,c)=>{S.flags.prepRule+=2;c.pm.ambition=clamp(c.pm.ambition+5,0,100);return '九锡既加，权相之礼，俨然僭主。然其志愈骄，其备愈疏。（积蓄+2）';},result:'',log:'权臣加九锡。'},
+ ]},
+
+/* ========== 阴谋爆发 ========== */
+{id:'assassin',title:'宫闱惊变',src:'变起肘腋',
+ cond:S=>FKEYS.some(k=>S.factions[k].plot>=7&&S.factions[k].attitude<25),w:99,cool:5,
+ setup:S=>({k:FKEYS.find(k=>S.factions[k].plot>=7&&S.factions[k].attitude<25)}),
+ body:(S,c)=>`夜半，${c.k==='eunuch'?'值殿宦者忽自袖中抽出短刃':c.k==='consort'?'御膳之中验出鸩毒，迹连中宫近侍':c.k==='army'?'禁军卫士数人持刃闯入寝殿':'刺客逾墙而入，直扑寝殿'}！变起仓促，电光石火之间——`,
+ opts:[
+  {txt:'（命运一掷）',risky:1,fx:{},after:(S,c)=>{S.factions[c.k].plot=-4;const guard=S.factions.eunuch.attitude/300+S.a/250+(S.factions.army.attitude>60?0.15:0);if(chance(clamp(0.45+guard,0.4,0.92))){fxc({a:6,f:{[c.k]:[-12,8]}});const purge=S.ministers.filter(m=>m.faction===c.k&&m.loyalty<40)[0];let ex='';if(purge){removeMinister(purge,'坐逆诛');ex=`穷治其狱，${purge.name}等皆伏诛。`;}return `侍卫扑救及时，刺客就擒！严刑之下，供出主使乃${fname(c.k)}中人。${ex}帝抚膺长叹：卧榻之侧，岂容凶徒。`;}else{S.emperor.health=0;S.flags.assassinated=true;return `刃光及体，左右救之不及……帝崩于非命。`;}},result:'',log:'宫闱遇刺。'},
+ ]},
+
+{id:'coup',title:'甲士叩阙',src:'变起肘腋',
+ cond:S=>FKEYS.some(k=>S.factions[k].plot>=8&&S.factions[k].power>55),w:99,cool:5,
+ setup:S=>({k:FKEYS.find(k=>S.factions[k].plot>=8&&S.factions[k].power>55)}),
+ body:(S,c)=>`鼓打三更，宫门外火光骤起！${fname(c.k)}勾结禁军一部，矫称"清君侧"，甲士数千已叩宫门。社稷安危，决于今夜！`,
+ opts:[
+  {txt:'登楼宣谕，以天子之威慑之',risky:1,fx:{},after:(S,c)=>resolveCoup(c.k,'awe'),result:'',log:'政变，帝亲谕乱军。'},
+  {txt:'调忠诚禁军血战',risky:1,fx:{},after:(S,c)=>resolveCoup(c.k,'fight'),result:'',log:'政变，禁军血战。'},
+ ]},
+
+/* ========== 锦上添花 ========== */
+{id:'golden',title:'四海升平',src:'诸道贺表',
+ cond:S=>S.t>66&&S.p>66&&S.m>66&&S.a>66,w:3,cool:5,
+ body:()=>`仓廪实，甲兵利，万民乐业，纲纪修明。诸道争上贺表："海内晏然，可谓盛世。"史官秉笔，将书何字？`,
+ opts:[
+  {txt:'戒骄戒惧："忧劳兴国，逸豫亡身"',fx:{a:4,p:2},result:'帝以盛世自警，君臣相勉。史官大书："是岁，天下大治。"',log:'盛世自警。','golden':1},
+  {txt:'大赦天下，与民同乐',fx:{t:-8,p:8,a:3},result:'赦书下，万方同庆，颂声盈路。',log:'盛世大赦。','golden':1},
+ ]},
+
+{id:'talent',title:'大才求见',src:()=>'吏部 · '+off('personnel'),
+ cond:S=>S.ministers.filter(m=>!m.office).length<7,w:2,cool:4,
+ body:()=>`有布衣上万言书于阙下，纵论天下事，识者惊为王佐之才。${off('personnel')}请召对，量才录用。`,
+ opts:[
+  {txt:'召对擢用',fx:{t:-2},after:S=>{const m=newMinister(pick(['scholar','scholar','gentry','army']),{talent:ri(7,10),loyalty:ri(60,90),age:ri(28,40)});S.ministers.push(m);return `${m.name}对答如流，帝大悦，留备任用。（已入候补之列）`;},result:'',log:'擢用布衣大才。'},
+  {txt:'狂生大言，逐之',fx:{f:{scholar:[0,-4]}},result:'其人掷笔于地："朝廷无识人之明！"飘然而去。后闻为藩镇所聘。',log:'逐上书布衣。'},
+ ]},
+];
+
+/* ============================================================
+   密谈库 — 大臣之间的私下对话，每年暗中发生并产生实际影响
+   御史大夫的才能决定陛下能"听见"几条
+   ============================================================ */
+const WHISPERS=[
+ {id:'w_clique',type:'结党',
+  cond:S=>true,
+  gen:S=>{const ks=FKEYS.filter(k=>S.ministers.filter(m=>m.faction===k).length>=2);if(!ks.length)return null;const k=pick(ks);const ms=shuffle(S.ministers.filter(m=>m.faction===k)).slice(0,2);return{k,ms};},
+  fx:(S,c)=>{S.factions[c.k].power=clamp(S.factions[c.k].power+2,5,100);},
+  text:(S,c)=>`夜，${c.ms[0].name}私邸。${c.ms[0].name}谓${c.ms[1].name}曰："${pick(['吾辈同气连枝，要害之位，断不可落于外人之手。','某已嘱咐吏部相熟之人，铨选名单，先过我们的眼。','明日廷议，你我同进同退，自然无往不利。'])}"二人相视而笑。`},
+ {id:'w_grudge',type:'怨望',
+  cond:S=>FKEYS.some(k=>S.factions[k].attitude<45),
+  gen:S=>{const ks=FKEYS.filter(k=>S.factions[k].attitude<45&&S.ministers.some(m=>m.faction===k));if(!ks.length)return null;const k=pick(ks);const m=pick(S.ministers.filter(x=>x.faction===k));return{k,m};},
+  fx:(S,c)=>{S.factions[c.k].attitude=clamp(S.factions[c.k].attitude-2,0,100);},
+  text:(S,c)=>`酒酣，${c.m.name}掷杯于案："${pick(['今上视我'+fname(c.k)+'如仇雠，鸟尽弓藏，兔死狗烹！','我等为国效死，所得几何？寒心，寒心！','此等待遇，是可忍，孰不可忍。'])}"座中默然，无人接话，亦无人离席。`},
+ {id:'w_plot',type:'密谋',
+  cond:S=>FKEYS.some(k=>S.factions[k].attitude<25&&S.factions[k].power>42),
+  gen:S=>{const ks=FKEYS.filter(k=>S.factions[k].attitude<25&&S.factions[k].power>42);if(!ks.length)return null;const k=pick(ks);const ms=shuffle(S.ministers.filter(m=>m.faction===k));return{k,ms:ms.slice(0,2)};},
+  fx:(S,c)=>{S.factions[c.k].plot+=2;},
+  text:(S,c)=>{const a=c.ms[0]?c.ms[0].name:fname(c.k)+'中人';const b=c.ms[1]?c.ms[1].name:'其党';return `密室之中，${a}屏退左右，与${b}耳语良久。只隐约听得"${pick(['事成之后','宫中接应','不可再忍','名单','那一夜'])}"数字。烛影摇红，杀机暗藏。`;}},
+ {id:'w_corrupt',type:'贪墨',
+  cond:S=>true,
+  gen:S=>{const cand=S.ministers.filter(m=>m.loyalty<60&&m.office);if(!cand.length)return null;return{m:pick(cand)};},
+  fx:(S,c)=>{S.t=clamp(S.t-2,0,100);},
+  text:(S,c)=>`${c.m.name}府中，深夜有车马自后门入，卸下沉甸甸的箱笼数十口。门房得了封口钱，只作不见。`},
+ {id:'w_ambition',type:'窥位',
+  cond:S=>S.ministers.some(m=>m.ambition>70&&m.office),
+  gen:S=>{const cand=S.ministers.filter(m=>m.ambition>70&&m.office);if(!cand.length)return null;return{m:pick(cand)};},
+  fx:(S,c)=>{c.m.ambition=clamp(c.m.ambition+3,0,100);},
+  text:(S,c)=>`相士出入${c.m.name}府邸，为其看相，言其"${pick(['贵不可言','龙行虎步，非人臣之相','他日必位极人臣'])}"。${c.m.name}急掩其口，赏而遣之，然嘴角笑意，掩之不及。`},
+ {id:'w_loyal',type:'忠议',
+  cond:S=>S.ministers.some(m=>m.loyalty>75),
+  gen:S=>{const cand=S.ministers.filter(m=>m.loyalty>75);if(!cand.length)return null;const m=pick(cand);const dangers=[];FKEYS.forEach(k=>{if(S.factions[k].power>62)dangers.push(fname(k)+'势大');if(S.factions[k].attitude<30)dangers.push(fname(k)+'怀怨');});if(S.t<30)dangers.push('国库空虚');if(S.p<30)dangers.push('民怨沸腾');if(!dangers.length)dangers.push('居安当思危');return{m,d:pick(dangers)};},
+  fx:(S,c)=>{},
+  text:(S,c)=>`${c.m.name}与门生夜话，抚膺长叹："${c.d}，吾主圣明，不知察之否？吾当寻机进谏。"`},
+ {id:'w_prince',type:'攀附',
+  cond:S=>S.princes.some(p=>p.age>=13),
+  gen:S=>{const ps=S.princes.filter(p=>p.age>=13);if(!ps.length)return null;const p=pick(ps);const m=pick(S.ministers);return{p,m};},
+  fx:(S,c)=>{c.p.scheming=(c.p.scheming||0)+(c.p.crown?0:1);},
+  text:(S,c)=>`${c.m.name}重金购得前朝法帖，辗转献于皇${c.p.crown?'太子':'子'}${c.p.name}门下。从龙之功，须趁早烧冷灶——朝中谁人不晓。`},
+ {id:'w_eunuch_ear',type:'通传',
+  cond:S=>S.factions.eunuch.power>30,
+  gen:S=>{const e=S.ministers.find(m=>m.faction==='eunuch');const o=pick(S.ministers.filter(m=>m.faction!=='eunuch'&&m.office));if(!o)return null;return{e,o};},
+  fx:(S,c)=>{S.factions.eunuch.power=clamp(S.factions.eunuch.power+2,5,100);},
+  text:(S,c)=>`${c.o.name}府上管事，与${c.e?c.e.name:'内侍省管事'}的干儿子结为兄弟。自此宫中一言一动，不出三日必达于外；外朝章奏未上，禁中已先知之。`},
+];
+
+/* ============================================================
+   核心系统：被事件引用的操作函数
+   ============================================================ */
+function topFactions(){return FKEYS.map(k=>({key:k,...S.factions[k]})).sort((a,b)=>b.power-a.power);}
+function removeMinister(m,reason){
+  if(!m)return;
+  m.office=null;
+  S.ministers=S.ministers.filter(x=>x!==m);
+  if(S.flags.powerMin===m)S.flags.powerMin=null;
+}
+function addConsort(f){
+  const ranks=['贵妃','妃','昭仪','婕妤'];
+  S.consorts.push({name:pick(CONSORT_SUR)+'氏',faction:f,rank:S.consorts.length===0?'皇后':ranks[Math.min(S.consorts.length-1,3)],favor:50});
+  if(S.consorts.length===1)S.empressFaction=f;
+}
+function newPrinceName(){
+  for(let i=0;i<30;i++){const n='姜'+pick(EMPEROR_GIVEN);
+    if(n!==S.emperor.name&&!S.princes.some(p=>p.name===n))return n;}
+  return '姜'+pick(EMPEROR_GIVEN)+pick(GIVEN2);
+}
+function setCrown(p){
+  S.princes.forEach(x=>x.crown=false);
+  p.crown=true;p.scheming=0;
+  if(p.motherFaction)fxc({f:{[p.motherFaction]:[4,4]}});
+  addLog(`册立${p.name}为皇太子。`,'big');
+}
+function resolveOust(pm,desperate){
+  const f=pm.faction;
+  const ch=clamp(0.25+S.a/140+S.flags.prepRule*0.07-(S.factions[f].power-55)/250,0.12,0.9);
+  if(chance(ch)){
+    removeMinister(pm,'伏诛');S.flags.prepRule=0;
+    fxc({a:12,f:{[f]:[-12,-8]}});
+    addLog(`权相${pm.name}罢黜伏诛，朝野震肃。`,'big');
+    return `禁军雷霆围府，${pm.name}就缚，赐死于狱。其党或诛或贬，权臣之患一朝而除。陛下乾纲独断，威权复振！（相位虚悬，宜速补任）`;
+  }else{
+    fxc({a:desperate?-16:-10,f:{[f]:[6,-10]}});
+    S.factions[f].plot+=2;
+    pm.loyalty=clamp(pm.loyalty-20,0,100);
+    addLog(`罢相之诏不行，帝威大损。`,'bad');
+    return `诏书未出宫门，已为${pm.name}所知！其党羽布列禁省，封还诏书，竟不奉行。次日${pm.name}入见，言笑如常，而陛下汗透重衣。君臣之分，自此愈危。`;
+  }
+}
+function resolveCoup(k,mode){
+  S.factions[k].plot=-4;
+  let ok;
+  if(mode==='awe'){ok=chance(clamp(0.2+S.a/150+(k!=='army'?S.factions.army.attitude/350:0),0.12,0.85));}
+  else{const loyal=k==='army'?S.factions.eunuch.attitude:S.factions.army.attitude;ok=chance(clamp(0.2+S.m/180+loyal/280,0.15,0.9));}
+  if(ok){
+    fxc({a:10,p:mode==='fight'?-4:0,f:{[k]:[-16,-6]}});
+    const head=S.ministers.filter(m=>m.faction===k).sort((a,b)=>a.loyalty-b.loyalty)[0];
+    let ex='';if(head){removeMinister(head,'伏诛');ex=`穷治逆党，${head.name}枭首于市。`;}
+    addLog('叩阙之变敉平。','big');
+    return (mode==='awe'
+      ?`帝登宣武门楼，按剑而立："朕在此，欲反者可前！"天威之下，乱军股栗，倒戈缚其首恶以献。一场大变，谈笑而定。`
+      :`忠义之军自玄武门杀出，喋血宫垣，至晓乃定。`)+ex;
+  }else{
+    if(chance(0.45)){
+      S.emperor.health=0;S.flags.assassinated=true;
+      return `宫门洞开，乱军直入……刀光起处，帝崩于非命。`;
+    }else{
+      fxc({a:-22,f:{[k]:[10,0]}});
+      addLog('叩阙之变，帝威扫地。','bad');
+      return `乱军直入大内，劫持帝驾，矫诏尽诛异己而后退。帝虽免于刀兵，威权扫地，自此政令半出于${fname(k)}之手。`;
+    }
+  }
+}
+
+/* ============================================================
+   回合流程
+   ============================================================ */
+function draftMemorials(){
+  const drawn=[];let bigDrawn=false;
+  const pool=()=>EVENTS.filter(ev=>{
+    if(ev.once&&S.onceDone[ev.id])return false;
+    if(S.cooldown[ev.id]&&S.year<S.cooldown[ev.id])return false;
+    if(drawn.some(d=>d.ev.id===ev.id))return false;
+    if(bigDrawn&&ev.w>=99)return false;
+    try{if(!ev.cond(S))return false;}catch(e){return false;}
+    return true;
+  });
+  for(let n=0;n<3;n++){
+    const cands=pool();if(!cands.length)break;
+    let total=cands.reduce((s,e)=>s+e.w,0),r=Math.random()*total,sel=cands[0];
+    for(const e of cands){r-=e.w;if(r<=0){sel=e;break;}}
+    let ctx={};
+    if(sel.setup){
+      try{ctx=sel.setup(S);}catch(e){ctx=null;}
+      if(!ctx||Object.values(ctx).some(v=>v===undefined)){S.cooldown[sel.id]=S.year+1;n--;continue;}
+    }
+    drawn.push({ev:sel,ctx});
+    if(sel.w>=99)bigDrawn=true;
+    S.cooldown[sel.id]=S.year+(sel.cool||3);
+    if(sel.once)S.onceDone[sel.id]=1;
+  }
+  return drawn;
+}
+
+function beginYear(){
+  S.year++;S.eraYear++;
+  S.actions=1;
+  if(S.flags.regency){
+    S.phase='regency';S.regActed=false;
+    S.regFlavor=pick([
+      '摄政于私第批答章奏，除授之命，多不经御前。',
+      '四方贡献，半入摄政之门。',
+      '朝会之上，百官但望摄政颜色行事。',
+      '有言官请帝预闻政事，旋即外贬。',
+    ]);
+  }else{
+    S.memQueue=draftMemorials();S.memIdx=0;
+    S.phase=S.memQueue.length?'memo':'free';
+  }
+  setTab('gov');render();
+  /* 低值预警 */
+  ['t','p','m','a'].forEach(k=>{
+    if(S[k]<18&&!S.flags.warned[k]){S.flags.warned[k]=1;toast(`${STAT_NAMES[k]}垂危！`);}
+    if(S[k]>=25)S.flags.warned[k]=0;
+  });
+}
+
+let pendingAfterSeal=null;
+function choose(i){
+  const mem=S.memQueue[S.memIdx];if(!mem)return;
+  const opt=mem.ev.opts[i];
+  const label=opt.txtf?opt.txtf(S):opt.txt;
+  const sealChar=/驳|拒|不|罢|斥|逐|禁|止/.test(label)?'驳':'准';
+  showSeal(sealChar,()=>{
+    fxCollector=[];
+    applyFx(opt.fx);
+    let extra='';
+    if(opt.after){try{extra=opt.after(S,mem.ctx)||'';}catch(e){extra='';}}
+    const chips=fxCollector;fxCollector=null;
+    if(opt.log)addLog(opt.log);
+    let text=(opt.result||'');
+    if(extra)text=text?(text+'\n'+extra):extra;
+    S.lastResult={text:text||'诏可。',chips};
+    S.phase='result';
+    render();showDeltas();
+    const fall=checkFall();if(fall)return gameOver(fall);
+  });
+}
+function advanceMemo(){
+  if(S.emperor.health<=0)return succession();
+  const fall=checkFall();if(fall)return gameOver(fall);
+  S.memIdx++;
+  S.phase=S.memIdx<S.memQueue.length?'memo':'free';
+  render();
+}
+function checkFall(){
+  if(S.t<=0)return 't';if(S.p<=0)return 'p';if(S.m<=0)return 'm';if(S.a<=0)return 'a';
+  return null;
+}
+
+/* ---------- 年末结算 ---------- */
+function endYear(){
+  const rep={chips:[],whis:[],notes:[],hidden:0,total:0};
+  /* 1. 部门产出与自然损耗 */
+  const drift={t:-1,p:0,m:0,a:0};
+  const outMap={revenue:'t',war:'m',justice:'p',rites:'a'};
+  for(const o in outMap){
+    const m=officer(o);
+    let d= m?(m.talent>=8?2:m.talent>=6?1:m.talent>=4?0:-1):-2;
+    if(o==='revenue'&&m&&m.talent>=6)d+=1;
+    drift[outMap[o]]+=d;
+  }
+  if(S.p>=65)drift.t+=1;
+  const ch=officer('chancellor');
+  if(!ch)drift.a-=2;
+  else{if(ch.loyalty>70&&ch.talent>=6)drift.a+=1;if(ch.ambition>75)drift.a-=1;}
+  if(!officer('personnel'))rep.notes.push('吏部无主，铨选停滞。');
+  if(S.t<18){drift.m-=2;rep.notes.push('军饷不继，士气低落。');}
+  if(topFactions()[0].power>78)drift.a-=1;
+  if(S.flags.regency){drift.a-=1;}
+  rep.chips.push(...applyFx(drift));
+  let fall=checkFall();if(fall)return gameOver(fall);
+
+  /* 2. 派系演化 */
+  FKEYS.forEach(k=>{
+    const F=S.factions[k];
+    const seats=S.ministers.filter(m=>m.faction===k&&m.office).length;
+    F.power=clamp(F.power+(seats>=3?2:seats===2?1:seats===0?-2:0),5,100);
+    F.attitude=clamp(F.attitude+(F.attitude<55?1:-0.5),0,100);
+    /* 阴谋累积 */
+    if(F.attitude<25)F.plot+=((F.power>55&&F.attitude<18)?2:1);
+    else if(F.attitude>40)F.plot=Math.max(0,F.plot-2);
+    if(F.power>72&&chance(.5))rep.notes.push(`${fname(k)}声势日盛，门下趋附者众。`);
+  });
+
+  /* 3. 密谈暗流 */
+  const visN=Math.floor(offTalent('censor')/3);
+  const tries=shuffle(WHISPERS);let made=0;
+  for(const w of tries){
+    if(made>=ri(1,3))break;
+    try{
+      if(!w.cond(S))continue;
+      const ctx=w.gen(S);if(!ctx)continue;
+      w.fx(S,ctx);made++;rep.total++;
+      if(rep.whis.length<visN){
+        const txt=w.text(S,ctx);
+        rep.whis.push({type:w.type,text:txt});
+        addLog(txt,'whisper');
+      }else rep.hidden++;
+    }catch(e){}
+  }
+
+  /* 4. 权臣判定 */
+  const pm=S.flags.powerMin;
+  if(pm&&(!S.ministers.includes(pm)||pm.office!=='chancellor'||S.factions[pm.faction].power<55)){
+    S.flags.powerMin=null;addLog('权臣之势渐衰，朝局稍安。');rep.notes.push('权臣之势渐衰。');
+  }
+  if(!S.flags.powerMin&&ch&&ch.ambition>65&&S.factions[ch.faction].power>65){
+    S.flags.powerMin=ch;
+    addLog(`宰相${ch.name}权势日隆，渐有震主之威。`,'bad');
+    rep.notes.push(`⚠ 宰相${ch.name}权倾朝野，皇权日削！`);
+  }
+  if(S.flags.powerMin){S.a=clamp(S.a-2,0,100);S.factions[S.flags.powerMin.faction].power=clamp(S.factions[S.flags.powerMin.faction].power+1,5,100);}
+
+  /* 5. 大臣老病 */
+  for(const m of S.ministers.slice()){
+    m.age++;
+    if(m.age>62&&chance((m.age-62)*0.028)){
+      const wasOff=m.office?OFFICES[m.office].name:'';
+      removeMinister(m,'病卒');
+      addLog(`${wasOff}${m.name}病卒，年${m.age}。`);
+      rep.notes.push(`${wasOff}${m.name}病卒。${wasOff?'其位虚悬。':''}`);
+    }
+  }
+  while(S.ministers.filter(m=>!m.office).length<4){
+    const q=offTalent('personnel');
+    S.ministers.push(newMinister(null,{talent:ri(2,Math.min(9,4+Math.ceil(q/2)))}));
+  }
+
+  /* 6. 宫闱 */
+  for(const p of S.princes.slice()){
+    p.age++;
+    if(p.health<35&&chance(.2)){
+      S.princes=S.princes.filter(x=>x!==p);
+      addLog(`皇子${p.name}薨，年${p.age}。`,'bad');
+      rep.notes.push(`皇子${p.name}不幸夭亡。`);
+    }
+  }
+  if(!S.flags.regency&&S.consorts.length&&S.emperor.age<55&&S.princes.length<5&&chance(.3)){
+    const mom=pick(S.consorts);
+    const p={name:newPrinceName(),age:0,talent:ri(3,9),health:ri(55,95),motherFaction:mom.faction,crown:false,scheming:0,tutored:0};
+    S.princes.push(p);
+    addLog(`${mom.rank}${mom.name}诞下皇子，赐名${p.name.slice(1)}。`,'big');
+    rep.notes.push(`喜讯：${mom.rank}诞下皇子${p.name}。`);
+  }
+
+  /* 7. 圣体 */
+  const e=S.emperor;
+  e.age++;e.reignYears++;
+  let dec=ri(0,2);
+  if(e.age>50)dec++;if(e.age>62)dec++;
+  if(e.age>=e.lifespan)dec+=10;
+  e.health=clamp(e.health-dec,0,100);
+  if(e.health<=0)return succession();
+
+  /* 8. 盛世计数 */
+  S.score.years++;
+  if(S.t>66&&S.p>66&&S.m>66&&S.a>66){
+    S.score.golden++;
+    rep.notes.push('史官记：是岁天下大治。');
+  }
+  fall=checkFall();if(fall)return gameOver(fall);
+
+  S.yearReport=rep;
+  S.phase='yearend';
+  render();showDeltas();
+}
+
+/* ============================================================
+   摄政模式
+   ============================================================ */
+function regAct(i){
+  if(S.regActed)return;
+  const R=S.flags.regency;
+  fxCollector=[];let text='';
+  if(i===0){S.flags.prepRule+=1;text='陛下深居简出，于经史之中默观古今兴废。摄政见帝恭谨无为，疑心渐弛。（积蓄 +1）';}
+  else if(i===1){
+    S.flags.prepRule+=2;
+    if(chance(.25)){R.alert++;text=`陛下借经筵之机，与侍读老臣密语未来。然摄政耳目无孔不入，此事已有风声传出……（积蓄 +2，摄政生疑 ${R.alert}/3）`;}
+    else text='陛下借经筵之机，与忠直老臣暗通声气。数位老臣垂泪顿首："臣等待陛下亲政之日。"（积蓄 +2）';
+  }
+  else if(i===2){
+    S.flags.prepRule+=3;fxc({f:{army:[0,3]}});
+    if(chance(.4)){R.alert++;text=`密使出京联络边将。边将然诺，然使者归途为摄政眼线所察，幸而灭口及时，未露真凭。（积蓄 +3，摄政生疑 ${R.alert}/3）`;}
+    else text='密使怀帝手书出京。边镇大将焚书而誓："但俟陛下一纸诏书。"（积蓄 +3）';
+  }
+  else if(i===3){return attemptPersonalRule();}
+  const chips=fxCollector;fxCollector=null;
+  if(R.alert>=3)return gameOver('deposed');
+  S.regActed=true;
+  S.lastResult={text,chips};
+  S.phase='regresult';
+  render();
+}
+function attemptPersonalRule(){
+  const R=S.flags.regency;
+  const chALL=clamp(0.2+S.flags.prepRule*0.07+S.a/250-R.alert*0.06-(S.factions[R.faction].power-50)/300,0.08,0.92);
+  fxCollector=[];let text='';
+  if(chance(chALL)){
+    const f=R.faction;
+    fxc({a:18,f:{[f]:[-13,-8]}});
+    if(S.flags.powerMin&&S.flags.powerMin.faction===f){const pmn=S.flags.powerMin.name;removeMinister(S.flags.powerMin,'诛');text=`深夜，忠臣率甲士入宫，边镇大军同日陈兵境上、上表请帝亲政。${R.kind}${R.name||''}措手不及，${pmn}下狱赐死。`;}
+    else text=`大朝会上，老臣出列，掷地有声："陛下年已${S.emperor.age}，请${R.kind}归政！"百官齐拜，山呼万岁。${R.kind}环顾左右，竟无一人相助，唯有顿首交权。`;
+    text+='\n陛下亲政，乾纲独断，万象更新！';
+    S.flags.regency=null;S.flags.prepRule=0;
+    addLog(`帝亲政，${R.kind}归政。`,'big');
+  }else{
+    R.alert++;
+    fxc({a:-6});
+    addLog('亲政之议受挫。','bad');
+    text=`亲政之议方起，${R.kind}党羽即群起攻讦倡议老臣"离间两宫"，贬死于道。陛下孤立殿上，无人应声。（摄政生疑 ${R.alert}/3）`;
+    if(R.alert>=3){fxCollector=null;return gameOver('deposed');}
+  }
+  const chips=fxCollector;fxCollector=null;
+  S.regActed=true;
+  S.lastResult={text,chips};
+  S.phase='regresult';
+  render();showDeltas();
+}
+
+/* ============================================================
+   继承
+   ============================================================ */
+function shiOf(e,avg){
+  if(S.flags.assassinated)return '愍';
+  if(avg>66&&e.reignYears>=16)return S.m>62?'武':'文';
+  if(avg>55)return pick(['景','宣','孝','明']);
+  if(avg>42)return pick(['平','惠','安']);
+  if(avg>28)return pick(['僖','怀','靖']);
+  return pick(['炀','灵','哀']);
+}
+function succession(){
+  const e=S.emperor;
+  const avg=(S.t+S.p+S.m+S.a)/4;
+  const temple=TEMPLE_SEQ[Math.min(S.gen,TEMPLE_SEQ.length-1)];
+  const shi=shiOf(e,avg);
+  e.temple=temple;
+  const deathLine=S.flags.assassinated?`帝崩于非命，春秋${e.age}。`:`帝崩于大内，春秋${e.age}。`;
+  addLog(`${deathLine}庙号${temple}，谥曰${shi}皇帝，在位${e.reignYears}年。`,'big');
+
+  let heir=S.princes.find(p=>p.crown)
+        ||S.princes.filter(p=>p.age>=15).sort((a,b)=>b.age-a.age)[0]
+        ||S.princes.slice().sort((a,b)=>b.age-a.age)[0]
+        ||null;
+  const motherF=heir?heir.motherFaction:null;
+  const rivals=S.princes.filter(p=>p!==heir&&(p.scheming||0)>=3);
+  let body=`${S.era}${yearCn(S.eraYear)}年，${deathLine}\n庙号${temple}，谥曰${shi}皇帝，葬于皇陵。\n`;
+
+  S.gen++;S.score.gens++;
+  S.flags.regency=null;
+  const newEra=makeEra();
+  let regSetup=null;
+
+  if(heir){
+    const crowned=heir.crown;
+    S.emperor={name:heir.name,age:heir.age,health:Math.max(40,heir.health),lifespan:ri(44,80),temple:null,reignYears:0};
+    S.a=clamp(S.a-8+(heir.talent-5),5,100);
+    if(motherF){S.factions[motherF].power=clamp(S.factions[motherF].power+8,5,100);S.factions[motherF].attitude=clamp(S.factions[motherF].attitude+5,0,100);}
+    if(heir.age>=15){
+      body+=`\n${crowned?'皇太子':'皇子'}${heir.name}柩前即位，时年${cn(heir.age)}。\n${crowned?'国本早定，中外帖然。':'仓促拥立，朝野观望，新君威信未孚。'}`;
+      if(!crowned)S.a=clamp(S.a-8,5,100);
+      addLog(`新帝${heir.name}即位，改元${newEra}。`,'big');
+    }else{
+      regSetup=chooseRegent(motherF);
+      S.flags.regency=regSetup;
+      body+=`\n幼主${heir.name}即位，年方${cn(heir.age)}岁。\n${regSetup.kind}${regSetup.name?('·'+regSetup.name):''}摄政，临朝称制。\n主少国疑，大权旁落——陛下须韬光养晦，待羽翼丰满之日，一举亲政。`;
+      addLog(`幼主${heir.name}即位，${regSetup.kind}摄政。改元${newEra}。`,'bad');
+    }
+    if(rivals.length){
+      const rv=rivals[0];
+      S.a=clamp(S.a-6,5,100);
+      if(rv.motherFaction)S.factions[rv.motherFaction].plot+=2;
+      body+=`\n${rv.name}觊觎大位已久，奉诏就藩之日，回望宫阙，目光阴鸷。`;
+    }
+  }else{
+    S.emperor={name:'姜'+pick(EMPEROR_GIVEN),age:ri(17,28),health:ri(70,90),lifespan:ri(44,78),temple:null,reignYears:0};
+    S.a=clamp(S.a-18,5,100);
+    body+=`\n大行皇帝无嗣！宰执与宗正连夜密议，迎立宗室疏属${S.emperor.name}入继大统。\n仓促之间，法统不固，人心浮动。`;
+    if(S.flags.assassinated){S.a=clamp(S.a-8,5,100);body+='\n弑君之案未明，新君如坐针毡。';}
+    addLog(`宗室${S.emperor.name}入继大统，改元${newEra}。`,'big');
+  }
+  S.era=newEra;S.eraYear=0;
+  S.consorts=[];S.princes=[];S.empressFaction=null;
+  S.flags.prepRule=0;S.flags.assassinated=false;S.flags.warned={};
+  FKEYS.forEach(k=>S.factions[k].plot=Math.max(0,S.factions[k].plot-3));
+
+  showScreen({glyph:'崩',gold:false,title:temple+shi+'皇帝',sub:`第${cn(S.gen-1)}代 · 在位${e.reignYears}年`,body,btn:regSetup?'幼主践祚':'嗣君即位',cb:()=>{hideScreen();beginYear();}});
+}
+function chooseRegent(motherF){
+  const pm=S.flags.powerMin;
+  if(pm&&S.ministers.includes(pm))return {kind:'权相',name:pm.name,faction:pm.faction,alert:0};
+  if(motherF||S.consorts.length)return {kind:'太后',name:'',faction:motherF||S.consorts[0].faction,alert:0};
+  const c=officer('chancellor');
+  if(c)return {kind:'辅政宰相',name:c.name,faction:c.faction,alert:0};
+  return {kind:'太后',name:'',faction:'consort',alert:0};
+}
+
+/* ============================================================
+   终局
+   ============================================================ */
+const ENDINGS={
+  t:{g:'空',t:'府库枯竭',b:'国库一空，百官星散，戍卒因饥自溃。乱兵入京之日，府库唯余空椟与蛛网。\n——失天下之财，遂失天下。'},
+  p:{g:'火',t:'万民倒戈',b:'苛政猛于虎。赤旗自大泽而起，所过郡县，箪食壶浆以迎"义军"。\n宫阙在冲天火光中化为焦土。\n——水能载舟，亦能覆舟。'},
+  m:{g:'破',t:'神京陷落',b:'武备尽弛，烽燧无人。胡骑长驱南下，如入无人之境。\n城破之日，宗庙为墟，衣冠南渡者十不存一。\n——忘战者，必危。'},
+  a:{g:'禅',t:'权臣受禅',b:'三辞三让的把戏演罢，"禅位"诏书用玺。\n旧主封侯，迁居别馆，旋以"暴疾"闻。\n大雍之号，自此绝于史册。\n——大权一去，便不复返。'},
+  deposed:{g:'废',t:'幼帝见废',b:'摄政矫太后诏，数帝"失德"，废为庶人，幽于别宫。\n未几，"暴疾而崩"，年寿不永。\n朝野皆知其冤，而无一人敢言。'},
+};
+function gameOver(type){
+  const E=ENDINGS[type]||ENDINGS.a;
+  addLog(`【${E.t}】大雍亡。`,'bad');
+  const sc=S.score;
+  const body=`${E.b}\n\n——————————\n国祚：${sc.years} 年\n传承：${sc.gens} 代\n盛世：${sc.golden} 年\n——————————\n${verdict(sc)}`;
+  showScreen({glyph:E.g,gold:false,title:E.t,sub:'社稷倾覆',body,btn:'重整山河',cb:()=>{hideScreen();startGame();}});
+}
+function verdict(sc){
+  if(sc.years>=100)return '史评：百年国祚，足称一朝。兴亡之间，皆是人事。';
+  if(sc.years>=60)return '史评：数世经营，终付东流。后之视今，亦犹今之视昔。';
+  if(sc.years>=30)return '史评：守成不易，为君实难。';
+  return '史评：其兴也勃焉，其亡也忽焉。';
+}
+
+/* ---------- 行动 ---------- */
+function useAction(){
+  if(S.actions<=0){toast('今年朝议之机已用罄，且待来年');return false;}
+  S.actions--;return true;
+}
+function actAppoint(officeKey){
+  if(S.actions<=0){toast('今年朝议之机已用罄');return;}
+  const cands=S.ministers.filter(m=>!m.office);
+  let html=`<h4>除授 · ${OFFICES[officeKey].name}</h4><div class="m-body">`;
+  if(!cands.length)html+='<div class="small-dim">朝中已无候补之臣</div>';
+  cands.forEach(m=>{
+    html+=`<div class="pick" onclick="doAppoint('${officeKey}',${m.id})">
+      <div class="min-name">${fdot(m.faction)}${esc(m.name)}<span style="font-size:11px;color:var(--ink-faint)">${fname(m.faction)}</span></div>
+      <div class="min-attrs"><span>才具 <span class="stars">${starStr(m.talent)}</span></span><span>${loyaltyTag(m)}</span><span>${ambitionTag(m)}</span><span>年${m.age}</span></div>
+    </div>`;
+  });
+  const cur=officer(officeKey);
+  if(cur)html+=`<div class="pick" onclick="doAppoint('${officeKey}',0)" style="color:var(--cinnabar-bright)">仅罢免现任 ${esc(cur.name)}，暂虚其位</div>`;
+  html+='</div><button class="btn ghost" onclick="closeModal()">罢了</button>';
+  openModal(html);
+}
+function doAppoint(officeKey,minId){
+  closeModal();
+  if(!useAction())return;
+  const cur=officer(officeKey);
+  if(minId===0){
+    if(cur){const f=cur.faction;assign(null,officeKey);cur.office=null;cur.loyalty=clamp(cur.loyalty-15,0,100);
+      applyFx({f:{[f]:[-3,-5]}});
+      addLog(`罢${OFFICES[officeKey].name}${cur.name}。`);toast(`已罢免 ${cur.name}`);}
+  }else{
+    const m=S.ministers.find(x=>x.id===minId);if(!m)return;
+    if(cur){cur.loyalty=clamp(cur.loyalty-12,0,100);applyFx({f:{[cur.faction]:[-2,-3]}});}
+    assign(m,officeKey);
+    m.loyalty=clamp(m.loyalty+8,0,100);
+    applyFx({f:{[m.faction]:[3,2]}});
+    addLog(`以${m.name}为${OFFICES[officeKey].name}。`);
+    toast(`${m.name} 拜${OFFICES[officeKey].name}`);
+  }
+  render();showDeltas();
+}
+function actReward(minId){
+  const m=S.ministers.find(x=>x.id===minId);if(!m)return;
+  if(S.t<5){toast('国库不足，无以为赏');return;}
+  if(!useAction())return;
+  applyFx({t:-4});
+  m.loyalty=clamp(m.loyalty+13,0,100);
+  applyFx({f:{[m.faction]:[0,3]}});
+  addLog(`厚赐${m.name}，以示恩宠。`);
+  toast(`${m.name} 感激涕零`);
+  render();showDeltas();
+}
+function actPrison(minId){
+  const m=S.ministers.find(x=>x.id===minId);if(!m)return;
+  openModal(`<h4>下狱抄家</h4><div class="m-body" style="margin-bottom:10px">将${fdot(m.faction)}<b>${esc(m.name)}</b>下狱抄家、削职为民？<br>
+  <span style="color:var(--ink-dim);font-size:13px">· 抄没家产入国库<br>· ${fname(m.faction)}势力受挫、恭顺大降${m.loyalty>=70?'<br>· <span style="color:var(--cinnabar-bright)">此人素称忠直，无罪而诛恐寒众心</span>':''}${S.a<35?'<br>· <span style="color:var(--cinnabar-bright)">皇权衰微，强行兴狱恐激变</span>':''}</span></div>
+  <button class="btn danger" onclick="doPrison(${m.id})">下　狱</button>
+  <button class="btn ghost" onclick="closeModal()">且慢</button>`);
+}
+function doPrison(minId){
+  closeModal();
+  const m=S.ministers.find(x=>x.id===minId);if(!m)return;
+  if(!useAction())return;
+  const f=m.faction,loyal=m.loyalty,wasOff=m.office?OFFICES[m.office].name:'';
+  removeMinister(m,'下狱');
+  applyFx({t:6,f:{[f]:[-7,-11]}});
+  if(loyal>=70){
+    applyFx({p:-4,a:-3});
+    FKEYS.forEach(k=>{if(k!==f)S.factions[k].attitude=clamp(S.factions[k].attitude-3,0,100);});
+    addLog(`${wasOff}${m.name}无罪下狱，籍没其家。中外为之扼腕。`,'bad');
+    toast('忠良蒙冤，人心暗寒');
+  }else{
+    applyFx({a:2});
+    addLog(`${wasOff}${m.name}下狱抄家。`);
+    toast(`${m.name} 已下诏狱`);
+  }
+  render();showDeltas();
+}
+function actDismiss(minId){
+  const m=S.ministers.find(x=>x.id===minId);if(!m)return;
+  if(!useAction())return;
+  const wasOff=m.office?OFFICES[m.office].name:'';
+  removeMinister(m,'逐');
+  applyFx({f:{[m.faction]:[-2,-4]}});
+  addLog(`黜${wasOff}${m.name}，放归田里。`);
+  toast(`${m.name} 已逐出朝堂`);
+  render();showDeltas();
+}
+function actCrown(princeId){
+  const p=S.princes.find(x=>x.name===princeId);if(!p)return;
+  if(!useAction())return;
+  fxCollector=[];setCrown(p);fxCollector=null;
+  toast(`已册立 ${p.name} 为皇太子`);
+  render();showDeltas();
+}
+function actPlacate(k){
+  if(S.t<4){toast('国库不足，无以施恩');return;}
+  if(!useAction())return;
+  applyFx({t:-3,f:{[k]:[0,9]}});
+  S.factions[k].plot=Math.max(-2,S.factions[k].plot-3);
+  addLog(`降恩抚慰${fname(k)}，赐宴赏赉。`);
+  toast(`${fname(k)} 感沐天恩`);
+  render();showDeltas();
+}
+function actSelect(){
+  if(S.actions<=0){toast('今年朝议之机已用罄');return;}
+  if(S.consorts.length>=4){toast('后宫之数已足');return;}
+  if(S.t<6){toast('国库不足，采选且缓');return;}
+  let html='<h4>采选淑女</h4><div class="m-body">';
+  [['gentry','世族之女','门第清贵，可结世族之欢'],['army','将门之女','飒爽英姿，边将与有荣焉'],['scholar','清白之家','德容俱佳，清流称颂'],['consort','后族之女','亲上加亲，外戚愈固']].forEach(([k,t,d])=>{
+    html+=`<div class="pick" onclick="doSelect('${k}')"><div class="min-name">${fdot(k)}${t}</div><div class="min-attrs">${d}</div></div>`;
+  });
+  html+='</div><button class="btn ghost" onclick="closeModal()">罢了</button>';
+  openModal(html);
+}
+function doSelect(k){
+  closeModal();
+  if(!useAction())return;
+  applyFx({t:-5,f:{[k]:[3,4]}});
+  addConsort(k);
+  const c=S.consorts[S.consorts.length-1];
+  addLog(`纳${fname(k)}之女${c.name}为${c.rank}。`);
+  toast(`${c.name} 入宫为${c.rank}`);
+  render();showDeltas();
+}
+
+/* ============================================================
+   界面渲染
+   ============================================================ */
+function cn(n){n=Math.floor(n);const D='一二三四五六七八九';
+  if(n<=0)return '零';
+  if(n<10)return D[n-1];
+  if(n<20)return '十'+(n%10?D[n%10-1]:'');
+  if(n<100)return D[Math.floor(n/10)-1]+'十'+(n%10?D[n%10-1]:'');
+  return String(n);}
+function yearCn(n){return n<=1?'元':cn(n);}
+function healthTier(h){
+  if(h>=70)return ['龙体康健','#9fc99a'];
+  if(h>=45)return ['圣体尚安','var(--ink-dim)'];
+  if(h>=25)return ['时有微恙','#d2a04a'];
+  return ['缠绵病榻','var(--cinnabar-bright)'];}
+function attTag(a){
+  if(a>=68)return {t:'恭顺',c:'#9fc99a'};
+  if(a>=45)return {t:'平静',c:'var(--ink-dim)'};
+  if(a>=28)return {t:'怨望',c:'#d2a04a'};
+  return {t:'汹汹',c:'var(--cinnabar-bright)'};}
+const FCHAR={gentry:'阀',scholar:'儒',eunuch:'宦',consort:'戚',army:'军'};
+function deriveHint(opt){
+  const parts=[];const fx=opt.fx||{};
+  ['t','p','m','a'].forEach(k=>{if(fx[k])parts.push(`<span class="${fx[k]>0?'hint-up':'hint-dn'}">${STAT_GLYPH[k]}${fx[k]>0?'↑':'↓'}</span>`);});
+  if(fx.f)for(const k in fx.f){const[dp,da]=fx.f[k];const v=dp||da;if(!v)continue;
+    parts.push(`<span class="${v>0?'hint-up':'hint-dn'}">${FCHAR[k]}${v>0?'↑':'↓'}</span>`);}
+  if(fx.health)parts.push(`<span class="${fx.health>0?'hint-up':'hint-dn'}">体${fx.health>0?'↑':'↓'}</span>`);
+  if(opt.risky)parts.push('<span style="color:var(--gold-bright)">？</span>');
+  return parts.join(' ');
+}
+function renderTop(){
+  $('#era-name').textContent=`${S.era}${yearCn(S.eraYear)}年`;
+  $('#era-sub').textContent=`大雍 · 第${cn(S.gen)}代 · ${S.flags.regency?'主少国疑':'帝春秋'+cn(S.emperor.age)}`;
+  [['t','#st-t'],['p','#st-p'],['m','#st-m'],['a','#st-a']].forEach(([k,sel])=>{
+    const el=$(sel);
+    el.querySelector('.s-val').textContent=S[k];
+    el.querySelector('.s-bar i').style.width=S[k]+'%';
+    el.classList.toggle('low',S[k]<25);
+  });
+}
+function showDeltas(){
+  [['t','#st-t'],['p','#st-p'],['m','#st-m'],['a','#st-a']].forEach(([k,sel])=>{
+    const d=lastDelta[k];if(!d)return;lastDelta[k]=0;
+    const sp=$(sel).querySelector('.delta');
+    sp.textContent=(d>0?'+':'')+d;
+    sp.className='delta '+(d>0?'d-up':'d-dn');
+    void sp.offsetWidth;sp.classList.add('show');
+  });
+  renderTop();
+}
+function chipsHtml(chips){
+  if(!chips||!chips.length)return '<span class="fx neu">朝局如旧</span>';
+  return chips.map(c=>`<span class="fx ${c.val>0?'up':'dn'}">${esc(c.label)} ${c.val>0?'+':''}${c.val}</span>`).join('');
+}
+
+/* ---------- 朝政页 ---------- */
+function renderGov(){
+  const el=$('#pg-gov');
+  if(!S){el.innerHTML='';return;}
+  if(S.phase==='memo'){
+    const mem=S.memQueue[S.memIdx];
+    if(!mem){S.phase='free';return renderGov();}
+    const ev=mem.ev;
+    const src=typeof ev.src==='function'?ev.src(S):ev.src;
+    let body='';try{body=typeof ev.body==='function'?ev.body(S,mem.ctx):ev.body;}catch(e){body='（章奏字迹漫漶）';}
+    let opts='';
+    ev.opts.forEach((o,i)=>{
+      const label=o.txtf?o.txtf(S):o.txt;
+      opts+=`<button class="opt" onclick="choose(${i})"><span>${esc(label)}</span><span class="o-hint">${deriveHint(o)}</span></button>`;
+    });
+    el.innerHTML=`<div id="memo-wrap">
+      <div class="memo-count">今日章奏 · 第${cn(S.memIdx+1)}道 / 共${cn(S.memQueue.length)}道</div>
+      <div class="memo"><div class="memo-inner">
+        <div class="memo-src"><span>${esc(src)}</span></div>
+        <div class="memo-title kai">${esc(ev.title)}</div>
+        <div class="memo-body">${esc(body)}</div>
+      </div></div>
+      <div class="opts">${opts}</div></div>`;
+  }
+  else if(S.phase==='result'||S.phase==='regresult'){
+    const r=S.lastResult||{text:'',chips:[]};
+    const isMemo=S.phase==='result';
+    const btnTxt=isMemo?(S.memIdx+1<S.memQueue.length?'下一道':'批　讫'):'退　朝';
+    el.innerHTML=`<div class="result-card"><div class="r-text" style="white-space:pre-line">${esc(r.text)}</div><div class="fx-list">${chipsHtml(r.chips)}</div></div>
+      <button class="btn" onclick="${isMemo?'advanceMemo()':'endYear()'}">${btnTxt}</button>`;
+  }
+  else if(S.phase==='free'){
+    let warns='';
+    const warnMsg={t:'再不开源节流，百官军卒将无以为继',p:'民怨一旦沸腾，烽火便在眼前',m:'武备废弛，外敌乱党皆在窥伺',a:'皇权若坠，废立只在权臣一念之间'};
+    ['t','p','m','a'].forEach(k=>{if(S[k]<22)warns+=`<div class="notice">⚠ ${STAT_NAMES[k]}已危（${S[k]}）——${warnMsg[k]}。</div>`;});
+    if(S.flags.powerMin)warns+=`<div class="notice">⚠ 宰相${esc(S.flags.powerMin.name)}权倾朝野，皇权岁岁受蚀。</div>`;
+    el.innerHTML=`${warns}
+      <div class="result-card"><div class="r-text">今日章奏已批讫。${S.actions>0?'今岁尚可亲断<b style="color:var(--gold-bright)">一事</b>——除授、抚慰、赏罚、采选、立储，俱在【朝堂】【众臣】【宫闱】各页。':'今岁朝议之机已用罄。'}</div></div>
+      <button class="btn" onclick="endYear()">退　朝</button>`;
+  }
+  else if(S.phase==='yearend'){
+    const rep=S.yearReport||{chips:[],whis:[],notes:[],total:0,hidden:0};
+    const notes=rep.notes.map(n=>`<div class="h-item" style="color:var(--ink)">· ${esc(n)}</div>`).join('');
+    const whis=rep.whis.map(w=>`<div class="result-card" style="border-color:#4a3a55;margin:0 auto 8px"><div style="font-size:11px;color:#9d8bb5;letter-spacing:2px;margin-bottom:4px">密报 · ${esc(w.type)}</div><div class="r-text" style="white-space:pre-line;font-size:13.5px;color:#cfc4dd">${esc(w.text)}</div></div>`).join('');
+    el.innerHTML=`<div class="memo-count">${S.era}${yearCn(S.eraYear)}年 · 岁末</div>
+      <div class="result-card"><div class="fx-list">${chipsHtml(rep.chips)}</div>${notes||'<div class="h-item">四海无事。</div>'}</div>
+      <h3 class="sec">风闻密报</h3>
+      ${whis||'<div class="small-dim">今岁未察得任何密议</div>'}
+      <div class="small-dim">御史风闻：朝野私议${rep.total}起，可察${rep.whis.length}起${rep.hidden?'，余者隐于暗处':''}</div>
+      <button class="btn" onclick="beginYear()">翌年视朝</button>`;
+  }
+  else if(S.phase==='regency'){
+    const R=S.flags.regency;
+    el.innerHTML=`<div class="notice">主少国疑 · ${esc(R.kind)}${R.name?('·'+esc(R.name)):''}临朝称制（${fname(R.faction)}）</div>
+      <div class="memo"><div class="memo-inner">
+        <div class="memo-src"><span>垂帘之下</span></div>
+        <div class="memo-title kai">${S.era}${yearCn(S.eraYear)}年</div>
+        <div class="memo-body">今岁章奏，皆由${R.kind}批答，未尝经御前。${S.regFlavor}
+
+陛下春秋${cn(S.emperor.age)}，蛰居深宫，唯有暗中布置，以待来日。
+亲政积蓄：${S.flags.prepRule} ｜ 摄政之疑：${R.alert} / 3</div>
+      </div></div>
+      <div class="opts">
+        <button class="opt" onclick="regAct(0)"><span>韬光养晦，默观时局</span><span class="o-hint"><span class="hint-up">稳</span></span></button>
+        <button class="opt" onclick="regAct(1)"><span>密结忠直老臣</span><span class="o-hint"><span class="hint-up">积蓄↑</span> <span style="color:var(--gold-bright)">？</span></span></button>
+        <button class="opt" onclick="regAct(2)"><span>暗通边镇强藩</span><span class="o-hint"><span class="hint-up">积蓄↑↑</span> <span style="color:var(--gold-bright)">？？</span></span></button>
+        ${S.emperor.age>=15?`<button class="opt" style="border-color:#6e3530" onclick="regAct(3)"><span class="kai" style="color:var(--cinnabar-bright);font-size:16px">发动亲政！</span><span class="o-hint"><span style="color:var(--gold-bright)">命运一掷</span></span></button>`:''}
+      </div>
+      <div class="small-dim">${S.emperor.age>=15?'积蓄愈厚，亲政愈稳；疑心满三，废立立至':'待陛下年满十五，方可图亲政'}</div>`;
+  }
+}
+
+/* ---------- 朝堂页 ---------- */
+function renderCourt(){
+  const el=$('#pg-court');if(!S)return;
+  let h=`<div class="notice gold">朝议之机：今岁尚余 ${S.actions} 事 ｜ 御史耳目：可察密谈 ${Math.floor(offTalent('censor')/3)} 起</div><h3 class="sec">朝中势力</h3>`;
+  topFactions().forEach(F=>{
+    const k=F.key,at=attTag(F.attitude);
+    const isPM=S.flags.powerMin&&S.flags.powerMin.faction===k;
+    h+=`<div class="fac-row">
+      <div class="fac-top"><span class="fac-name" style="color:${FACTIONS[k].hex}">${fname(k)}${isPM?'<span class="fac-tag" style="color:var(--cinnabar-bright);border-color:#6e3530">权倾朝野</span>':''}</span><span class="fac-att" style="color:${at.c}">恭顺 · ${at.t}</span></div>
+      <div class="fac-bars"><div class="fbar"><span>势力</span><div class="track"><i style="width:${F.power}%;background:${FACTIONS[k].hex}"></i></div><span>${F.power}</span></div></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px"><span style="font-size:11px;color:var(--ink-faint)">${FACTIONS[k].desc} ｜ 在朝${cn(S.ministers.filter(m=>m.faction===k).length)}人 · 要职${cn(S.ministers.filter(m=>m.faction===k&&m.office).length)}席</span><button class="mini-btn" style="min-height:30px;padding:4px 10px" onclick="actPlacate('${k}')">抚慰</button></div>
+    </div>`;
+  });
+  h+='<h3 class="sec">七府要职</h3>';
+  OKEYS.forEach(o=>{
+    const m=officer(o);
+    h+=`<div class="office"><div class="o-left">
+      <div class="o-title">${OFFICES[o].name}<span style="color:var(--ink-faint);letter-spacing:0;margin-left:6px;font-size:10.5px">${OFFICES[o].sub}</span></div>
+      <div class="o-name">${m?fdot(m.faction)+esc(m.name):'<span style="color:var(--cinnabar-bright)">虚位待补</span>'}</div>
+      ${m?`<div class="o-meta"><span class="stars">${starStr(m.talent)}</span> ｜ ${loyaltyTag(m)} ｜ ${ambitionTag(m)}</div>`:'<div class="o-meta">职事停滞，宜速除授</div>'}
+    </div><div class="o-act"><button class="mini-btn" onclick="actAppoint('${o}')">除授</button></div></div>`;
+  });
+  h+='<div class="small-dim">同派据要职愈多，其势愈张；虚位则政事日废</div>';
+  el.innerHTML=h;
+}
+
+/* ---------- 众臣页 ---------- */
+function renderMin(){
+  const el=$('#pg-min');if(!S)return;
+  let h=`<div class="notice gold">朝议之机：今岁尚余 ${S.actions} 事 ｜ 赏赐固其忠，下狱夺其财，黜免去其人</div>`;
+  const inOff=S.ministers.filter(m=>m.office);
+  const cands=S.ministers.filter(m=>!m.office);
+  const card=m=>`<div class="min-card">
+    <div class="min-head"><span class="min-name">${fdot(m.faction)}${esc(m.name)}${m.office?`<span class="min-office">${OFFICES[m.office].name}</span>`:''}</span><span style="font-size:11px;color:${FACTIONS[m.faction].hex}">${fname(m.faction)}</span></div>
+    <div class="min-attrs"><span>才具 <span class="stars">${starStr(m.talent)}</span></span><span>忠 <b>${loyaltyTag(m)}</b></span><span>志 <b>${ambitionTag(m)}</b></span><span>年${m.age}</span></div>
+    <div class="min-acts">
+      <button class="mini-btn" onclick="actReward(${m.id})">赏赐</button>
+      <button class="mini-btn" onclick="actDismiss(${m.id})">黜免</button>
+      <button class="mini-btn red" onclick="actPrison(${m.id})">下狱</button>
+    </div></div>`;
+  h+='<h3 class="sec">在朝重臣</h3>'+(inOff.map(card).join('')||'<div class="small-dim">朝堂空虚</div>');
+  h+='<h3 class="sec">候补之臣</h3>'+(cands.map(card).join('')||'<div class="small-dim">无人候补</div>');
+  el.innerHTML=h;
+}
+
+/* ---------- 宫闱页 ---------- */
+function renderPal(){
+  const el=$('#pg-pal');if(!S)return;
+  const e=S.emperor;const ht=healthTier(e.health);
+  let h=`<h3 class="sec">御　前</h3>
+    <div class="pal-card"><div class="pal-row"><div>
+      <div class="pal-title kai">${esc(e.name)} <span style="font-size:11px;color:var(--gold)">今上</span></div>
+      <div class="pal-sub">春秋${cn(e.age)} ｜ 在位${cn(Math.max(1,e.reignYears+1))}年 ｜ 圣体：<span style="color:${ht[1]}">${ht[0]}</span></div>
+    </div></div></div>`;
+  if(S.flags.regency){
+    const R=S.flags.regency;
+    h+=`<div class="notice">${esc(R.kind)}${R.name?('·'+esc(R.name)):''}临朝称制，宫禁出入皆受监视。</div>`;
+  }
+  h+='<h3 class="sec">后　妃</h3>';
+  if(S.consorts.length){
+    S.consorts.forEach(c=>{
+      h+=`<div class="pal-card"><div class="pal-row"><div>
+        <div class="pal-title">${fdot(c.faction)} ${esc(c.name)} <span style="font-size:11px;color:var(--gold)">${esc(c.rank)}</span></div>
+        <div class="pal-sub">出身${fname(c.faction)}</div>
+      </div></div></div>`;
+    });
+  }else h+='<div class="small-dim">中宫虚位，六宫无主</div>';
+  if(S.consorts.length<4&&!S.flags.regency)h+=`<button class="btn ghost" onclick="actSelect()">采选淑女（耗国库 · 占一事）</button>`;
+  h+='<h3 class="sec">皇　嗣</h3>';
+  if(S.princes.length){
+    S.princes.forEach(p=>{
+      const pt=healthTier(p.health);
+      h+=`<div class="pal-card"><div class="pal-row"><div>
+        <div class="pal-title">${esc(p.name)} ${p.crown?'<span class="crown">皇太子</span>':''}</div>
+        <div class="pal-sub">年${cn(p.age)} ｜ 资质 <span class="stars">${starStr(p.talent)}</span> ｜ <span style="color:${pt[1]}">${p.health>=45?'康健':p.health>=25?'体弱':'多病'}</span>${p.motherFaction?(' ｜ 母族·'+fname(p.motherFaction)):''}${(p.scheming||0)>=3?' ｜ <span class="tag-warn">门下宾客如市</span>':''}</div>
+      </div><div class="o-act">${!p.crown&&p.age>=6&&!S.flags.regency?`<button class="mini-btn" onclick="actCrown('${esc(p.name)}')">立储</button>`:''}</div></div></div>`;
+    });
+  }else h+='<div class="small-dim">膝下犹虚——子嗣不继，则国本动摇</div>';
+  h+='<div class="small-dim">太子年满十五登基为佳；幼主临朝，必遭摄政</div>';
+  el.innerHTML=h;
+}
+
+/* ---------- 史册页 ---------- */
+function renderHist(){
+  const el=$('#pg-hist');if(!S)return;
+  let h=`<h3 class="sec">大雍编年</h3><div class="hist">`;
+  let lastKey='';
+  for(let i=S.log.length-1;i>=0;i--){
+    const L=S.log[i];const key=L.era+'·'+L.eraYear;
+    if(key!==lastKey){h+=`<div class="h-year">${esc(L.era)}${yearCn(L.eraYear)}年</div>`;lastKey=key;}
+    h+=`<div class="h-item ${L.cls}">${esc(L.text)}</div>`;
+  }
+  h+='</div>';
+  el.innerHTML=h;
+}
+
+/* ---------- 框架 ---------- */
+let curPage='gov';
+function setTab(pg){
+  curPage=pg;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.pg===pg));
+  document.querySelectorAll('.page').forEach(p=>p.classList.toggle('on',p.id==='pg-'+pg));
+  renderPage();
+  $('#main').scrollTop=0;
+}
+function renderPage(){
+  ({gov:renderGov,court:renderCourt,min:renderMin,pal:renderPal,hist:renderHist})[curPage]();
+}
+function render(){if(!S)return;renderTop();renderPage();}
+function showSeal(ch,cb){
+  const L=$('#seal-layer');
+  L.innerHTML=`<div class="seal kai">${ch}</div>`;
+  L.classList.add('on');
+  setTimeout(()=>{L.classList.remove('on');L.innerHTML='';cb();},620);
+}
+function toast(msg){
+  const t=document.createElement('div');t.className='toast';t.textContent=msg;
+  document.body.appendChild(t);setTimeout(()=>t.remove(),2300);
+}
+function openModal(html){$('#modal').innerHTML=html;$('#modal-layer').classList.add('on');}
+function closeModal(){$('#modal-layer').classList.remove('on');}
+$('#modal-layer').addEventListener('click',e=>{if(e.target.id==='modal-layer')closeModal();});
+let screenCb=null;
+function showScreen(o){
+  screenCb=o.cb;
+  $('#screen').innerHTML=`<div class="sc-glyph${o.gold?' gold':''} kai">${esc(o.glyph)}</div>
+    <h1>${esc(o.title)}</h1><div class="sc-sub">${esc(o.sub)}</div>
+    <div class="sc-body">${esc(o.body)}</div>
+    <button class="btn" style="max-width:320px" onclick="screenCb&&screenCb()">${esc(o.btn)}</button>`;
+  $('#screen').classList.add('on');$('#screen').scrollTop=0;
+}
+function hideScreen(){$('#screen').classList.remove('on');}
+
+function startGame(){
+  newGame();
+  beginYear();
+}
+function init(){
+  document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>setTab(t.dataset.pg)));
+  showScreen({
+    glyph:'雍',gold:true,title:'大雍 · 社稷',sub:'帝王平衡术',
+    body:`太祖皇帝马上取天下，传国于你。
+先帝新丧，五姓环伺——
+门阀盘根，清流持节，宦寺窥伺，外戚坐大，骄兵悍将。
+
+【朝政】批朱之间，权衡五派；
+【一事】每岁之中，可亲断一事：除授、赏罚、抚慰、采选、立储；
+【密报】御史才具愈高，愈能听见大臣们私下在说什么；
+【传承】育储立嗣，江山有继——幼主临朝，必遭摄政。
+
+势大者抑之，怨深者抚之，忠直者用之。
+这盘棋没有胜局，只看大雍国祚，能在你手中传几代。`,
+    btn:'上　朝',
+    cb:()=>{hideScreen();startGame();}
+  });
+}
+init();
+</script>
+</body>
+</html>
