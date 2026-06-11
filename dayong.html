@@ -2117,6 +2117,30 @@ function validateEv(e,cap){
     return {title,speaker,body:body.slice(0,160),opts};
   }catch(_){return null;}
 }
+/* 稳健提取模型返回中的 JSON：容忍 ```代码块```、JSON 前后多余文字/思考过程，按大括号配平截取 */
+function llmBalanced(s,i){
+  let depth=0,inStr=false,esc=false;
+  for(let k=i;k<s.length;k++){
+    const c=s[k];
+    if(inStr){if(esc)esc=false;else if(c==='\\')esc=true;else if(c==='"')inStr=false;}
+    else{if(c==='"')inStr=true;else if(c==='{')depth++;else if(c==='}'){if(--depth===0)return s.slice(i,k+1);}}
+  }
+  return null;
+}
+function llmParseEvents(text){
+  const s=String(text||'').replace(/```json/gi,'').replace(/```/g,'');
+  let from=0,i,fallback=null;
+  while((i=s.indexOf('{',from))>=0){
+    from=i+1;
+    const obj=llmBalanced(s,i);
+    if(!obj)continue;
+    try{const j=JSON.parse(obj);
+      if(j&&Array.isArray(j.events))return j;
+      if(j&&!fallback)fallback=j;
+    }catch(_){}
+  }
+  return fallback;
+}
 async function genBatch(){
   const r=Math.random();
   const sev=r<.5?{name:'轻',cap:6}:r<.85?{name:'中',cap:10}:{name:'重',cap:15};
@@ -2136,8 +2160,8 @@ async function genBatch(){
 - f可省略；若有，键只能是gentry/scholar/eunuch/consort/army之一，值为[势力增减,恭顺增减]各±8内
 - 恰好2个opts，两难取舍；不出现真实历史人名朝代名`;
   const text=await llmCall([{role:'user',content:prompt}]);
-  const clean=text.replace(/```json|```/g,'').trim();
-  const j=JSON.parse(clean.slice(clean.indexOf('{')));
+  const j=llmParseEvents(text);
+  if(!j){console.warn('[LLM] 事件JSON解析失败，原始返回：',text);throw new Error('bad json');}
   const out=[];
   (j.events||[]).slice(0,3).forEach(e=>{const v=validateEv(e,sev.cap);if(v)out.push(v);});
   return out;
