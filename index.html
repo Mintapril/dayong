@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#171210">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="180x180" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="大雍社稷">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>大雍·社稷 贰</title>
 <style>
 :root{
@@ -255,6 +260,7 @@ h3.sec::after{background:linear-gradient(90deg,var(--gold-dim),transparent)}
   <div id="panel-head"><div id="panel-tabs">
     <span class="ptab on" data-pt="court">朝堂</span>
     <span class="ptab" data-pt="pal">宫闱</span>
+    <span class="ptab" data-pt="realm">邦交</span>
     <span class="ptab" data-pt="quest">国策</span>
     <span class="ptab" data-pt="hist">史册</span>
   </div></div>
@@ -557,6 +563,20 @@ const OKEYS=Object.keys(OFFICES);
 const STAT_NAMES={t:'国库',p:'民心',m:'军备',a:'皇权'};
 const STAT_GLYPH={t:'鼎',p:'民',m:'戈',a:'玺'};
 
+/* ---------- 四夷邻邦 ---------- */
+const REALMS={
+  di:{name:'北狄',hex:'#a5743c',desc:'草原汗国，控弦数十万'},
+  zhao:{name:'南诏',hex:'#5f7a52',desc:'西南山国，恃险而骄'},
+  hai:{name:'海东',hex:'#5a7a8a',desc:'海东之邦，慕华向化'},
+};
+const RKEYS=Object.keys(REALMS);
+function rname(k){return REALMS[k].name;}
+function realm(k){return S.realms[k];}
+function relTxt(R){return R.war?'交兵':R.rel>=70?'亲睦':R.rel>=50?'修好':R.rel>=30?'龃龉':'仇雠';}
+function mightTxt(v){return v>=70?'强盛':v>=50?'可观':v>=30?'寻常':'衰微';}
+const RCHAR={di:'狄',zhao:'诏',hai:'海'};
+function foeLine(k){return `（${rname(k)}国势${mightTxt(realm(k).might)}，我军备${mightTxt(S.m)}）`;}
+
 /* ---------- 大臣 ---------- */
 let mid=0;
 function newMinister(faction,opt={}){
@@ -595,6 +615,12 @@ function newGame(){
     t:55,p:55,m:55,a:62,
     emperor:{name:'姜'+pick(EMPEROR_GIVEN),age:22,health:ri2(75,90),lifespan:ri2(46,78),temple:null,reignYears:0},
     factions,ministers:[],consorts:[],princes:[],empressFaction:null,
+    realms:{
+      di:{rel:ri2(35,48),might:ri2(60,75),market:false,tribute:false,truce:0,war:false},
+      zhao:{rel:ri2(48,60),might:ri2(38,52),market:false,tribute:false,truce:0,war:false},
+      hai:{rel:ri2(60,75),might:ri2(24,38),market:false,tribute:chance(.5),truce:0,war:false},
+    },
+    war:null,
     flags:{regency:null,powerMin:null,prepRule:0,assassinated:false,warned:{},examReform:false,silkroad:false,pingzhun:false},
     cardQ:[],pending:[],whisPending:[],petDone:{},persDoneYr:0,
     quest:null,questCool:0,questsDone:{},
@@ -636,6 +662,11 @@ function applyFx(fx){
     const [dp,da]=fx.f[k];const F=S.factions[k];
     if(dp){F.power=clamp(F.power+dp,5,100);out.push({label:fname(k)+'·势力',val:dp});}
     if(da){F.attitude=clamp(F.attitude+da,0,100);out.push({label:fname(k)+'·恭顺',val:da});}
+  }
+  if(fx.r)for(const k in fx.r){
+    const [dr,dm]=fx.r[k];const R=S.realms[k];
+    if(dr){R.rel=clamp(R.rel+dr,0,100);out.push({label:rname(k)+'·邦交',val:dr});}
+    if(dm){R.might=clamp(R.might+dm,15,95);out.push({label:rname(k)+'·国势',val:dm});}
   }
   if(fx.health){S.emperor.health=clamp(S.emperor.health+fx.health,0,100);out.push({label:'圣体',val:fx.health});}
   return out;
@@ -748,6 +779,81 @@ function resolveCoup(k,mode){
   }
 }
 
+/* ---------- 对外战争 ---------- */
+function startWar(k,opt={}){
+  if(S.war)return;
+  const R=realm(k);
+  R.war=true;R.market=false;R.tribute=false;R.truce=0;
+  R.rel=clamp(R.rel-15,0,100);
+  S.war={k,year:0,score:opt.score||0,defensive:!!opt.defensive,turnYr:0};
+  addLog(`大雍与${rname(k)}交兵，烽火连天。`,'big');
+}
+function warScoreTxt(){
+  const s=S.war.score;
+  return s>=3?'大胜在望':s>=1?'我军占优':s<=-3?'危如累卵':s<=-1?'敌势方张':'相持不下';
+}
+function endWar(outcome){
+  const k=S.war.k,R=realm(k),score=S.war.score,defensive=S.war.defensive;
+  R.war=false;R.truce=4;S.war=null;
+  if(outcome==='win'){
+    R.might=clamp(R.might-16,15,95);R.rel=52;
+    fxc({a:10,m:3,p:3,t:6,f:{army:[5,4]}});
+    let extra='';
+    if(R.might<42&&chance(.6)){R.tribute=true;extra=`${rname(k)}遣王子入质，奉表称藩，岁贡方物。`;}
+    addLog(`王师大捷，${rname(k)}乞和。`,'big');
+    return `捷书飞至：王师${defensive?'尽逐犯境之敌，反旆深入其境':'深入其境，迭破其军'}，${rname(k)}遣使乞和，献马牛金帛以赎。${extra}\n献俘阙下之日，观者如堵，山呼万岁！`;
+  }
+  if(outcome==='rout'){
+    R.might=clamp(R.might+6,15,95);R.rel=25;
+    fxc({a:-10,m:-8,p:-5,t:-8});
+    addLog(`王师败绩于${rname(k)}，丧师辱国。`,'bad');
+    return `败报至京：王师丧师过半，弃甲如山……朝廷不得已卑辞厚币以请和。${rname(k)}受币而骄，边民泣血。\n此役之耻，史不绝书。`;
+  }
+  if(score>0){
+    R.rel=48;R.might=clamp(R.might-6,15,95);
+    fxc({a:4,t:-3});
+    addLog(`与${rname(k)}议和，约为兄弟之国。`);
+    return `我据上风而许和：${rname(k)}称谢罢兵，约为兄弟之国，各守疆界。\n虽未全功，国威已立。`;
+  }
+  if(score<0){
+    R.rel=42;
+    fxc({a:-6,t:-9});
+    addLog(`与${rname(k)}屈和，岁输金帛。`,'bad');
+    return `战事不利，和议遂成：岁输${rname(k)}金帛，使节卑辞于其庭。\n主和者弹冠相庆，主战者拊膺痛哭。`;
+  }
+  R.rel=45;fxc({t:-4});
+  addLog(`与${rname(k)}罢兵言和。`);
+  return `兵连祸结，两败俱伤，乃各引兵归，盟于界上。\n烽烟暂熄，边地始得春耕。`;
+}
+function warTurnCard(){
+  const W=S.war,k=W.k,R=realm(k);
+  W.year++;W.turnYr=S.year;
+  const sp=spkOff('war','war','军报如雪');
+  const tag={txt:'兵事',color:'#6e3530'};
+  const body=`王师与${rname(k)}${W.year>1?'相持已'+cn(W.year)+'年':'兵端方启'}，${warScoreTxt()}。\n馈饷日费千金，${R.might>58?'敌兵犹悍':'敌力渐疲'}；${S.t<30?'而我府库已见底——':'庙算决于陛下——'}是持重，是决战？`;
+  const peaceMode=W.score<=-2||W.year>=3;
+  const optL=peaceMode
+    ?{txt:'遣使议和',fx:{},after:S=>endWar('peace'),log:`遣使与${rname(k)}议和。`}
+    :{txt:'持重缓图',fx:{t:-5},after:S=>{
+        const g=chance(clamp(.45+offTalent('war')/30,.45,.8));
+        if(g)W.score+=1;
+        if(W.score>=4)return endWar('win');
+        return g?'坚壁清野，轻骑断敌粮道。敌势渐挫，我据上风。':'两军相持，烽燧相望，胜负未分。';
+      },log:'前线持重缓图。'};
+  const optR={txt:'会战决胜',risky:1,fx:{t:-7},after:S=>{
+      const p=clamp(.5+(S.m-R.might)/150+offTalent('war')/45+(S.factions.army.attitude-50)/300+W.score*.05,.15,.88);
+      if(chance(p)){
+        W.score+=2;fxc({m:-3,a:3,f:{army:[2,2]}});
+        if(W.score>=4)return endWar('win');
+        return `两军会于野，王师大破之，斩获以万计！${rname(k)}夺气而遁。`;
+      }
+      W.score-=2;fxc({m:-9,a:-4,p:-3});
+      if(W.score<=-4)return endWar('rout');
+      return '会战不利，王师折损甚众，退保城垒。败报至京，米价为之腾贵。';
+    },log:`与${rname(k)}会战。`};
+  return {kind:'choice',seasonal:true,title:`征${rname(k)} · 岁${cn(W.year)}`,tag,sp,body,ctx:{},opts:[optL,optR]};
+}
+
 /* ---------- 年结算（每4卡） ---------- */
 function yearTick(){
   const notes=[];
@@ -764,6 +870,8 @@ function yearTick(){
   if(S.p>=78)drift.t+=1;
   if(S.flags.silkroad)drift.t+=1;
   if(S.flags.pingzhun)drift.t+=1;
+  RKEYS.forEach(k=>{const R=S.realms[k];if(R.market)drift.t+=1;if(R.tribute)drift.t+=1;});
+  if(S.war){drift.t-=2;drift.p-=1;}
   const ch=officer('chancellor');
   if(!ch)drift.a-=2;
   else{if(ch.loyalty>70&&ch.talent>=6)drift.a+=1;if(ch.ambition>75)drift.a-=1;}
@@ -784,6 +892,30 @@ function yearTick(){
     F.attitude=clamp(F.attitude+(F.attitude<55?1:-0.8),0,100);
     if(F.attitude<25)F.plot+=((F.power>55&&F.attitude<18)?2:1);
     else if(F.attitude>40)F.plot=Math.max(0,F.plot-2);
+  });
+
+  /* 四夷消长 */
+  if(S.war&&S.flags.regency){
+    const wk=S.war.k;
+    realm(wk).war=false;realm(wk).truce=3;realm(wk).rel=40;S.war=null;
+    applyFx({t:-8,a:-4});
+    notes.push(`主少国疑，摄政不欲边事掣肘，遣使与${rname(wk)}媾和，岁币若干，战事遂寝。`);
+    addLog(`摄政与${rname(wk)}媾和罢兵。`);
+  }
+  RKEYS.forEach(k=>{
+    const R=S.realms[k];
+    if(R.truce>0)R.truce--;
+    if(R.war)return;
+    R.rel=clamp(R.rel+(R.market?1:0)+(R.rel>52?-1:R.rel<48?1:0)+ri2(-2,2),0,100);
+    R.might=clamp(R.might+ri2(-2,2),15,95);
+    if(R.tribute&&R.might>55&&chance(.25)){
+      R.tribute=false;R.rel=clamp(R.rel-10,0,100);
+      notes.push(`${rname(k)}国势复振，渐不奉正朔，贡使不至。`);
+      addLog(`${rname(k)}叛盟绝贡。`,'bad');
+    }
+    if(R.market&&R.rel<30){R.market=false;notes.push(`边衅既开，与${rname(k)}互市遂绝。`);}
+    if(R.rel<30&&R.might>45&&!R.warned){R.warned=1;notes.push(`边报：${rname(k)}与我交恶日深，其国势${mightTxt(R.might)}，斥候出没于塞下——兵祸恐不远矣。`);}
+    if(R.rel>=40)R.warned=0;
   });
 
   /* 密谈生成：可见者排队成密折卡 */
@@ -875,9 +1007,9 @@ function yearTick(){
 
   /* 重要事项 -> 叙事卡 */
   notes.forEach(n=>S.pending.push(noteCard('岁闻',n)));
-  /* 低值预警 */
+  /* 低值预警 -> 警示卡 */
   ['t','p','m','a'].forEach(k=>{
-    if(S[k]<18&&!S.flags.warned[k]){S.flags.warned[k]=1;toast(`${STAT_NAMES[k]}垂危！`);}
+    if(S[k]<18&&!S.flags.warned[k]){S.flags.warned[k]=1;S.pending.unshift(warnCard(k));}
     if(S[k]>=25)S.flags.warned[k]=0;
   });
   return 'ok';
@@ -946,6 +1078,7 @@ function succession(){
     if(S.flags.assassinated){S.a=clamp(S.a-8,5,100);body+='\n弑君之案未明，新君如坐针毡。';}
     addLog(`宗室${S.emperor.name}入继大统，改元${newEra}。`,'big');
   }
+  if(S.war)body+=`\n边烽未熄——与${rname(S.war.k)}之战事，仍待新君措置。`;
   S.era=newEra;S.eraYear=1;S.season=0;
   S.consorts=[];S.princes=[];S.empressFaction=null;
   S.flags.prepRule=0;S.flags.assassinated=false;S.flags.warned={};
@@ -1033,6 +1166,18 @@ const NARRATOR=()=>spk('civil','起居郎','随侍记注',997);
 function noteCard(title,body,sp){
   return {kind:'note',seasonal:false,title:title||'闻奏',body,sp:sp||NARRATOR(),opts:[]};
 }
+const WARN_DEF={
+  t:{o:'revenue',b:'国库存帛不足旬月之用！再无进项，百官之俸、三军之饷皆将断绝。\n臣泣血以闻：请陛下峻节用度、急开财源——迟则社稷不守！'},
+  p:{o:'censor',b:'民间怨声已沸！流民塞道，盗贼蜂起，乡野歌谣多怨刺之语。\n民心一失，揭竿者四起——伏望陛下速施仁政，以收人心！'},
+  m:{o:'war',b:'武备废弛已极！甲仗朽坏，士卒逃散，边堡空虚。\n一旦外敌入寇、内贼窃发，朝廷将无兵可用——练兵筹饷，刻不容缓！'},
+  a:{o:'censor',b:'天子之令，渐不出宫门！权移于下，臣下视诏旨如故纸。\n大权一去不复返——伏望陛下振乾纲、收威柄，迟则有禅代之祸！'},
+};
+function warnCard(k){
+  const d=WARN_DEF[k];
+  const c=noteCard(STAT_NAMES[k]+'垂危',d.b,spkOff(d.o,'censor'));
+  c.tag={txt:'危',color:'#8a2f28'};
+  return c;
+}
 
 /* ---------- 效果提示 ---------- */
 function deriveHint(opt){
@@ -1040,6 +1185,8 @@ function deriveHint(opt){
   ['t','p','m','a'].forEach(k=>{if(fx[k])parts.push(`<span class="${fx[k]>0?'hint-up':'hint-dn'}">${STAT_GLYPH[k]}${fx[k]>0?'↑':'↓'}</span>`);});
   if(fx.f)for(const k in fx.f){const[dp,da]=fx.f[k];const v=dp||da;if(!v)continue;
     parts.push(`<span class="${v>0?'hint-up':'hint-dn'}">${FCHAR[k]}${v>0?'↑':'↓'}</span>`);}
+  if(fx.r)for(const k in fx.r){const[dr,dm]=fx.r[k];const v=dr||dm;if(!v)continue;
+    parts.push(`<span class="${v>0?'hint-up':'hint-dn'}">${RCHAR[k]}${v>0?'↑':'↓'}</span>`);}
   if(fx.health)parts.push(`<span class="${fx.health>0?'hint-up':'hint-dn'}">体${fx.health>0?'↑':'↓'}</span>`);
   if(opt.risky)parts.push('<span class="hint-q">？</span>');
   return parts.join(' ');
@@ -1054,7 +1201,8 @@ function renderTop(){
   $('#era-txt').textContent=`${S.era}${yearCn(S.eraYear)}年 · ${SEASONS[S.season]}`;
   $('#era-sub').textContent=`第${cn(S.gen)}代 ${S.flags.regency?'· 主少国疑':'· 帝春秋'+cn(S.emperor.age)}`;
   const q=S.quest?QUESTS[S.quest.id]:null;
-  $('#qbar').innerHTML=q?`<span class="qchip">国策 · ${q.name} ${cn(S.quest.stage+1)}/${cn(q.stages.length)}</span>`:'';
+  const wq=S.war?`<span class="qchip" style="color:#d98a7a;border-color:#5a302a">兵事 · 征${rname(S.war.k)} · ${warScoreTxt()}</span>`:'';
+  $('#qbar').innerHTML=wq+(q?`<span class="qchip">国策 · ${q.name} ${cn(S.quest.stage+1)}/${cn(q.stages.length)}</span>`:'');
 }
 function render(){renderTop();}
 function pulseOrbs(){
@@ -1095,6 +1243,7 @@ function drawNext(){
 function seasonalCard(){
   if(S.flags.regency)return regencyCard();
   const c=crisisCard();if(c)return c;
+  if(S.war&&S.war.turnYr!==S.year)return warTurnCard();
   if(S.quest&&S.quest.timer<=0)return questStageCard();
   const qo=questOfferCard();if(qo)return qo;
   if(S.persDoneYr!==S.year){const pc=personnelCard();if(pc)return pc;}
@@ -1149,7 +1298,7 @@ function buildEventCard(ev,ctx){
   let sp;try{sp=ev.spx?ev.spx(S,ctx):NARRATOR();}catch(e){sp=NARRATOR();}
   S.recentTitles.push(ev.title);if(S.recentTitles.length>12)S.recentTitles.shift();
   return {kind:ev.fate?'fate':'choice',seasonal:true,title:ev.title,tag:ev.tag||null,
-    sp,body,ctx,opts:ev.opts.map(o=>Object.assign({},o,{txt:o.txtf?o.txtf(S,ctx):o.txt}))};
+    sp,body,ctx,opts:ev.opts.map(o=>Object.assign({},o,{txt:o.txtf?o.txtf(S,ctx):o.txt,fx:o.fxf?o.fxf(S,ctx):o.fx}))};
 }
 
 /* ---------- 卡片渲染 ---------- */
@@ -1410,12 +1559,12 @@ const EVENTS=[
   {txt:'开馆修史',fx:{t:-6,a:5,f:{scholar:[3,4]}},result:'史馆既开，海内文士云集京师。',log:'开史馆修国史。'},
  ]},
 /* —— 军事边患 —— */
-{id:'raid',title:'北狄寇边',cool:3,w:3,cond:S=>true,
+{id:'raid',title:'北狄寇边',cool:3,w:3,cond:S=>!S.war&&!S.realms.di.war&&S.realms.di.rel<65,
  spx:S=>spkOff('war','war','兵部'),
  body:S=>`北狄铁骑寇掠边州，杀掠吏民，驱牛马数万而去。边将告急——是发兵反击，还是遣使纳币求和？`,
  opts:[
-  {txt:'纳币议和',fx:{t:-12,p:-3,a:-6,m:1,f:{army:[0,-6]}},result:'狄人受币而退。边将愤言："以金帛饲虎，虎终噬人。"',log:'纳币与狄议和。'},
-  {txt:'发兵反击',risky:1,fx:{t:-10},after:S=>{const win=chance(clamp(S.m/130+offTalent('war')/40,0.2,0.85));if(win){fxc({m:6,a:7,p:3,f:{army:[5,4]}});return '王师出塞，大破狄骑于阴山之下，斩获甚众。捷书至京，朝野振奋！';}fxc({m:-12,a:-6,p:-5,f:{army:[-3,-4]}});return '王师轻进中伏，损兵折将而还。边地为之骚然。';},log:'北狄寇边，发兵反击。'},
+  {txt:'纳币议和',fx:{t:-12,p:-3,a:-6,m:1,f:{army:[0,-6]},r:{di:[8,0]}},result:'狄人受币而退。边将愤言："以金帛饲虎，虎终噬人。"',log:'纳币与狄议和。'},
+  {txt:'发兵反击',risky:1,fx:{t:-10},after:S=>{const win=chance(clamp(S.m/130+offTalent('war')/40,0.2,0.85));if(win){fxc({m:6,a:7,p:3,f:{army:[5,4]}});S.realms.di.might=clamp(S.realms.di.might-5,15,95);return '王师出塞，大破狄骑于阴山之下，斩获甚众。捷书至京，朝野振奋！';}fxc({m:-12,a:-6,p:-5,f:{army:[-3,-4]}});S.realms.di.rel=clamp(S.realms.di.rel-4,0,100);return '王师轻进中伏，损兵折将而还。边地为之骚然。';},log:'北狄寇边，发兵反击。'},
  ]},
 {id:'victory',title:'边将大捷',cool:5,w:2,cond:S=>S.m>45,
  spx:(S,c)=>c.g?spkMin(c.g,'献俘阙下'):spk('war','报捷信使'),
@@ -1439,12 +1588,12 @@ const EVENTS=[
   {txt:'调兵进剿',risky:1,fx:{t:-6},after:S=>{if(chance(clamp(S.m/120+0.2,0.3,0.8))){fxc({m:-3,a:6,f:{army:[-4,-5]}});return '官军压境，乱卒势穷出降，诛其魁首三百。诸镇凛然。';}fxc({m:-10,p:-6,a:-5});return '进剿失利，乱卒流窜数州，所过残破！';},log:'进剿哗变戍卒。'},
   {txt:'发饷抚之',fx:{t:-12,m:3,f:{army:[2,5]}},result:'乱卒得饷而定。然"哗变得饷"之例一开，诸军侧目。',log:'戍卒哗变，发饷抚定。'},
  ]},
-{id:'heqin',title:'狄使请婚',cool:8,w:1.5,cond:S=>true,
+{id:'heqin',title:'狄使请婚',cool:8,w:1.5,cond:S=>!S.war&&!S.realms.di.war,
  spx:S=>spk('envoy','北狄正使','奉表请婚'),
  body:S=>`可汗仰慕天朝，愿娶公主，永结舅甥之好——许之则边境暂安，拒之，恐启边衅。外臣静候圣裁。`,
  opts:[
-  {txt:'拒之',fx:{a:5,m:-3,f:{army:[2,2]}},result:'帝曰："堂堂天朝，岂以女子安边！"狄使悻悻而去。',log:'拒狄和亲之请。'},
-  {txt:'许嫁公主',fx:{t:-8,m:4,p:2,a:-4},result:'公主和亲出塞，边境数年无事。有诗曰："汉家青史上，计拙是和亲。"',log:'和亲北狄。'},
+  {txt:'拒之',fx:{a:5,m:-3,f:{army:[2,2]},r:{di:[-6,0]}},result:'帝曰："堂堂天朝，岂以女子安边！"狄使悻悻而去。',log:'拒狄和亲之请。'},
+  {txt:'许嫁公主',fx:{t:-8,m:4,p:2,a:-4,r:{di:[14,0]}},after:S=>{S.realms.di.truce=Math.max(S.realms.di.truce,2);return null;},result:'公主和亲出塞，边境数年无事。有诗曰："汉家青史上，计拙是和亲。"',log:'和亲北狄。'},
  ]},
 {id:'tribute',title:'万邦来朝',cool:6,w:1.5,cond:S=>S.a>50,
  spx:S=>spk('envoy','鸿胪寺卿','引诸国使'),
@@ -1460,7 +1609,7 @@ const EVENTS=[
   {txt:'国用不足，暂罢',fx:{m:-5,f:{army:[0,-4]}},result:'边将叹曰："朝廷之钱，不肯花在刀刃上。"',log:'罢修边备。'},
   {txt:'拨款大修',fx:{t:-13,m:11},result:'边墙连堡，烽火相望，边备为之一振。',log:'大修边塞。'},
  ]},
-{id:'defeat',title:'边军失利',cool:4,w:2.5,cond:S=>S.m<40,
+{id:'defeat',title:'边军失利',cool:4,w:2.5,cond:S=>S.m<40&&!S.war,
  spx:S=>spk('war','败军偏将','负荆请罪'),
  body:S=>`边军与虏战于野，大败，亡失辎重无数，一城陷没。败报至京，中外震动——罪在主将，还是朝廷自省？`,
  opts:[
@@ -1592,7 +1741,158 @@ const EVENTS=[
   {txt:'立长',after:(S,c)=>{setCrown(c.a);fxc({a:4});if(c.b)c.b.scheming=(c.b.scheming||0)+2;return `立${c.a.name}为太子，名分既定。${c.b.name}杜门谢客，然其心中之火未必已熄。`;},fx:{},log:'立长为储。'},
   {txt:'立贤',after:(S,c)=>{const best=[c.a,c.b].sort((x,y)=>y.talent-x.talent)[0];const loser=best===c.a?c.b:c.a;setCrown(best);fxc({a:2});if(loser)loser.scheming=(loser.scheming||0)+3;return `立${best.name}为太子。${loser.name}愤然："立嫡立长，古之制也，今何独废？"`;},fx:{},log:'立贤为储。'},
  ]},
+/* —— 外交邦交 —— */
+{id:'dip_envoy',title:'邻使来聘',cool:3,w:2.5,
+ cond:S=>RKEYS.some(k=>{const R=S.realms[k];return !R.war&&R.rel>=30&&R.rel<=85;}),
+ spx:(S,c)=>spk('envoy',rname(c.k)+'正使','奉国书来聘'),
+ setup:S=>{const ks=RKEYS.filter(k=>{const R=S.realms[k];return !R.war&&R.rel>=30&&R.rel<=85;});if(!ks.length)return null;return{k:pick(ks)};},
+ body:(S,c)=>`${rname(c.k)}遣使来聘，献方物，致其主问安之意。${off('rites')}请旨：回赐之礼，厚则示怀柔之恩，薄则存天朝之体——`,
+ opts:[
+  {txt:'淡然受之',fxf:(S,c)=>({a:2,r:{[c.k]:[-4,0]}}),result:'循例报聘而已。使者怏怏，归必有言。',log:'薄待来使。'},
+  {txt:'厚礼答聘',fxf:(S,c)=>({t:-5,r:{[c.k]:[8,0]}}),result:'锦帛器玩，赐赉有加。使者拜谢，两国之好愈固。',log:'厚答邻使。'},
+ ]},
+{id:'dip_market',title:'请开互市',cool:5,w:2,
+ cond:S=>RKEYS.some(k=>{const R=S.realms[k];return !R.war&&!R.market&&R.rel>=45;}),
+ spx:S=>spkOff('revenue'),
+ setup:S=>{const ks=RKEYS.filter(k=>{const R=S.realms[k];return !R.war&&!R.market&&R.rel>=45;});if(!ks.length)return null;return{k:pick(ks)};},
+ body:(S,c)=>`${rname(c.k)}遣使请于边境置榷场互市，以马易茶帛。臣计之：市利岁入可观；然边市一开，奸细出入，亦不可不防。`,
+ opts:[
+  {txt:'严边禁绝',fxf:(S,c)=>({a:2,r:{[c.k]:[-5,0]}}),result:'边禁如故。其使叹曰："天朝何吝一市？"',log:'拒开互市。'},
+  {txt:'许开榷场',fxf:(S,c)=>({t:3,p:2,r:{[c.k]:[8,0]}}),after:(S,c)=>{realm(c.k).market=true;addLog(`与${rname(c.k)}开边互市。`);return null;},result:'榷场既开，茶马相易，边民两利。（互市岁入+1）',log:'开边互市。'},
+ ]},
+{id:'dip_meng',title:'会盟之请',cool:7,w:1.5,
+ cond:S=>RKEYS.some(k=>{const R=S.realms[k];return !R.war&&R.rel>=55;}),
+ spx:S=>spkOff('rites'),
+ setup:S=>{const ks=RKEYS.filter(k=>{const R=S.realms[k];return !R.war&&R.rel>=55;});if(!ks.length)return null;return{k:pick(ks)};},
+ body:(S,c)=>`${rname(c.k)}请与我刑白马而盟，约世通和好、有警相援。盟则边备可省，然玉帛之费不赀，且夷狄之信，能持几年？`,
+ opts:[
+  {txt:'虚与委蛇',fxf:(S,c)=>({a:2,r:{[c.k]:[-4,0]}}),result:'盟期一推再推。其使知意，辞色渐冷。',log:'辞会盟之请。'},
+  {txt:'歃血为盟',fxf:(S,c)=>({t:-6,m:2,r:{[c.k]:[12,0]}}),after:(S,c)=>{addLog(`与${rname(c.k)}会盟于边。`);return null;},result:'坛上歃血，誓书藏于宗庙。北顾之忧，为之一纾。',log:'与邻邦会盟。'},
+ ]},
+{id:'dip_friction',title:'边吏启衅',cool:4,w:2,
+ cond:S=>RKEYS.some(k=>{const R=S.realms[k];return !R.war&&R.rel<60;}),
+ spx:S=>spkOff('censor'),
+ setup:S=>{const ks=RKEYS.filter(k=>{const R=S.realms[k];return !R.war&&R.rel<60;});if(!ks.length)return null;return{k:pick(ks)};},
+ body:(S,c)=>`边将贪功，擅出塞袭${rname(c.k)}部落，斩获以献。${rname(c.k)}移文抗议，索还俘口，辞甚切——边衅一开，恐启战端。`,
+ opts:[
+  {txt:'护短不问',fxf:(S,c)=>({m:2,a:2,r:{[c.k]:[-9,0]}}),result:'朝廷不问，边将益骄。邻邦衔之刺骨。',log:'边衅，护短不问。'},
+  {txt:'惩边吏，还俘口',fxf:(S,c)=>({a:-3,f:{army:[0,-3]},r:{[c.k]:[9,0]}}),result:'槛车征边将下狱，俘口尽还。邻邦称天朝有信。',log:'惩边吏以睦邻。'},
+ ]},
+{id:'dip_suibi',title:'强邻索币',cool:5,w:2.5,
+ cond:S=>RKEYS.some(k=>{const R=S.realms[k];return !R.war&&R.might>60&&R.rel<45;}),
+ spx:(S,c)=>spk('envoy',rname(c.k)+'来使','倨傲呈书'),
+ setup:S=>{const ks=RKEYS.filter(k=>{const R=S.realms[k];return !R.war&&R.might>60&&R.rel<45;});if(!ks.length)return null;return{k:pick(ks)};},
+ body:(S,c)=>`${rname(c.k)}国书倨傲："两国之好，岂可无礼？岁致金帛若干，则边塞晏然；不然，秋高马肥之日，恐惊圣听。"——此勒索也！\n${foeLine(c.k)}`,
+ opts:[
+  {txt:'与币市和',fxf:(S,c)=>({t:-10,a:-4,r:{[c.k]:[10,0]}}),after:(S,c)=>{realm(c.k).truce=2;return null;},result:'金帛出塞，边境暂安。识者叹："以财饲虎，虎且复来。"',log:'纳币于强邻。'},
+  {txt:'严词拒之',risky:1,fxf:(S,c)=>({a:4,r:{[c.k]:[-10,0]}}),after:(S,c)=>{
+    if(!S.flags.regency&&chance(.35)){startWar(c.k,{defensive:true});return `使者拂袖而去。未几，边书告急——${rname(c.k)}果然兴兵犯塞，战端已开！`;}
+    return '帝掷其书于地："天朝岂纳贡于夷狄！"使者悻悻去，边军戒严，烽燧昼夜相望。';},log:'拒强邻索币。'},
+ ]},
+{id:'dip_neiluan',title:'邻邦内乱',cool:6,w:1.5,
+ cond:S=>!S.war&&!S.flags.regency&&RKEYS.some(k=>{const R=S.realms[k];return !R.war&&R.might>=40&&R.truce===0;}),
+ spx:S=>spkOff('war'),
+ setup:S=>{const ks=RKEYS.filter(k=>{const R=S.realms[k];return !R.war&&R.might>=40&&R.truce===0;});if(!ks.length)return null;return{k:pick(ks)};},
+ body:(S,c)=>`谍报：${rname(c.k)}内乱，诸子争位，自相攻杀，其国大疲。\n${off('war')}奏：此天亡之时，趁乱击之，一举可定；然兵者凶器，圣人不得已而用之。\n${foeLine(c.k)}`,
+ opts:[
+  {txt:'遣使存抚',fxf:(S,c)=>({t:-3,r:{[c.k]:[7,0]}}),result:'遣使吊其乱、抚其新主。乱定之后，其主德我。',log:'邻乱，遣使存抚。'},
+  {txt:'趁乱伐之',risky:1,fx:{t:-8},after:(S,c)=>{startWar(c.k,{score:1});return `诏下，王师乘其敝而西，势如破竹——${rname(c.k)}之役，自此始矣。`;},log:'趁邻乱兴师。'},
+ ]},
+{id:'dip_chaogong',title:'藩国入贡',cool:4,w:1.5,
+ cond:S=>RKEYS.some(k=>S.realms[k].tribute&&!S.realms[k].war),
+ spx:(S,c)=>spk('envoy',rname(c.k)+'贡使','献方物于阙'),
+ setup:S=>{const ks=RKEYS.filter(k=>S.realms[k].tribute&&!S.realms[k].war);if(!ks.length)return null;return{k:pick(ks)};},
+ body:(S,c)=>`${rname(c.k)}贡使入朝，献名马、珠玉、方物，舞拜于庭。例当回赐——厚往薄来以怀远人，抑或平受其贡以实府库？`,
+ opts:[
+  {txt:'平受其贡',fxf:(S,c)=>({t:5,r:{[c.k]:[-3,0]}}),result:'贡物尽入内库，回赐如常仪。贡使微有怏色。',log:'平受藩贡。'},
+  {txt:'厚往薄来',fxf:(S,c)=>({t:-4,a:4,r:{[c.k]:[7,0]}}),result:'回赐三倍其贡。贡使顿首呼万岁，归而颂天朝之德。',log:'厚赐藩国。'},
+ ]},
+{id:'dip_chenfan',title:'请奉正朔',cool:8,w:1.5,
+ cond:S=>RKEYS.some(k=>{const R=S.realms[k];return !R.war&&!R.tribute&&R.rel>=65&&R.might<45;}),
+ spx:(S,c)=>spk('envoy',rname(c.k)+'王弟','奉表请藩'),
+ setup:S=>{const ks=RKEYS.filter(k=>{const R=S.realms[k];return !R.war&&!R.tribute&&R.rel>=65&&R.might<45;});if(!ks.length)return null;return{k:pick(ks)};},
+ body:(S,c)=>`${rname(c.k)}奉表：愿称臣内属，奉大雍正朔，岁修职贡，请赐册封——受之则威加海外，然自此其国有难，天朝亦不得坐视。`,
+ opts:[
+  {txt:'羁縻而已',fxf:(S,c)=>({r:{[c.k]:[2,0]}}),result:'赐其使而不纳其表。覊縻勿绝，存而不论。',log:'辞藩属之请。'},
+  {txt:'册封受藩',fxf:(S,c)=>({a:6,r:{[c.k]:[6,0]}}),after:(S,c)=>{realm(c.k).tribute=true;addLog(`册封${rname(c.k)}，其国称藩。`,'big');return null;},result:'册封礼成，其王北面受印。四夷闻之，皆言天朝之盛。（岁贡+1）',log:'受邻邦称藩。'},
+ ]},
+{id:'war_qingfa',title:'兵部请伐',cool:5,w:2,
+ cond:S=>!S.war&&!S.flags.regency&&S.m>=55&&RKEYS.some(k=>{const R=S.realms[k];return !R.war&&R.truce===0&&R.rel<42&&R.might<=S.m+20;}),
+ spx:S=>spkOff('war'),
+ setup:S=>{const ks=RKEYS.filter(k=>{const R=S.realms[k];return !R.war&&R.truce===0&&R.rel<42&&R.might<=S.m+20;});if(!ks.length)return null;return{k:pick(ks)};},
+ body:(S,c)=>`${rname(c.k)}屡失藩臣之礼，边患不绝。臣谨奏：今我兵甲已利，士饱马腾，请兴问罪之师，犁庭扫穴，永绝边患！\n一旦开战，岁岁靡费，胜负亦未可知。${foeLine(c.k)}`,
+ opts:[
+  {txt:'止戈为武',fx:{p:2,f:{army:[0,-3]}},result:'帝曰："兵者不祥之器。"其议遂寝，将士解甲叹息。',log:'罢请伐之议。'},
+  {txt:'兴师问罪',risky:1,fx:{t:-8},after:(S,c)=>{startWar(c.k);return `庙算既定，誓师于郊。旌旗蔽野，金鼓震天——征${rname(c.k)}之役，自此始矣。`;},log:'下诏兴师。'},
+ ]},
+/* —— 吏治内政 —— */
+{id:'civ_lvling',title:'删定律令',cool:7,w:2,cond:S=>true,
+ spx:S=>spkOff('justice'),
+ body:S=>`本朝律令承前代之旧，条目繁苛，奸吏得以舞文。臣请删定：然宽则失之纵，严则失之酷——立法之本，伏候圣裁。`,
+ opts:[
+  {txt:'宽刑省罚',fx:{p:6,a:-2},result:'去苛条百余，狱讼为清。民间称便，而豪猾亦颇自喜。',log:'删律从宽。'},
+  {txt:'严刑峻法',fx:{a:5,p:-5},result:'法网加密，吏民凛然。道路以目，而盗贼亦衰。',log:'定律从严。'},
+ ]},
+{id:'civ_kuoyin',title:'括隐检田',cool:8,w:2,cond:S=>S.factions.gentry.power>45,
+ spx:S=>spkOff('revenue'),
+ body:S=>`天下版籍隐漏甚多：豪族荫庇丁口，瞒报田亩，赋税尽入私门。臣请遣使括隐检田——所触者，皆有力之家。`,
+ opts:[
+  {txt:'不扰为安',fx:{f:{gentry:[2,3]}},result:'括隐之议寝。豪门弹冠相庆，国课依旧暗漏。',log:'罢括隐之议。'},
+  {txt:'遣使检括',fx:{t:11,p:-2,f:{gentry:[-5,-6]}},result:'检出隐户数十万、隐田无算，岁入大增。世族切齿，乡里亦有怨使者苛扰者。',log:'括隐检田。'},
+ ]},
+{id:'civ_shuili',title:'兴修水利',cool:6,w:2,cond:S=>true,
+ spx:S=>spk('civil','都水监丞','献图请役'),
+ body:S=>`关东诸渠岁久失修，旱则无以溉，涝则无以泄。臣绘图以献：修陂塘、浚沟洫，则瘠土可为良田——所费工料甚巨。`,
+ opts:[
+  {txt:'民力方疲，缓之',fx:{p:-2},result:'图存有司，事付来年。农人望天而食如故。',log:'缓修水利。'},
+  {txt:'发帑兴修',fx:{t:-10,p:9},result:'渠成之日，溉田万顷。父老立碑于堰上，颂朝廷之德。',log:'兴修水利。'},
+ ]},
+{id:'civ_jingcha',title:'京察大计',cool:8,w:1.5,cond:S=>true,
+ spx:S=>spkOff('personnel'),
+ body:S=>`六年京察之期已至。循例则百官具考状、堂官出考语，例行而已；若严核之，则贪庸者黜、循良者陟——必撄众怒。`,
+ opts:[
+  {txt:'例行故事',fx:{a:-2},result:'考语皆"称职"。京察如仪，一无黜陟。识者叹纲纪之弛。',log:'京察因循。'},
+  {txt:'严核黜陟',fx:{a:6},after:S=>{const ks=shuffle(FKEYS).slice(0,2);ks.forEach(k=>fxc({f:{[k]:[0,-4]}}));return `黜不称职者数十人，能吏不次擢用。百官震悚，${fname(ks[0])}、${fname(ks[1])}尤多怨望。`;},log:'京察严核。'},
+ ]},
+{id:'civ_yichuan',title:'整顿驿传',cool:7,w:1.5,cond:S=>true,
+ spx:S=>spk('civil','驾部郎中','驿务积弊'),
+ body:S=>`天下驿站千余，冗卒糜费；而要道文书反多稽滞。或议裁汰以省经费，或议增置以速政令——孰为得计？`,
+ opts:[
+  {txt:'裁汰冗驿',fx:{t:5,a:-2},result:'裁驿三百，岁省巨万。然偏远州县，奏报愈迟。',log:'裁汰冗驿。'},
+  {txt:'增驿广路',fx:{t:-7,a:4,m:2},result:'驿路四通，文书朝发夕至，边警一日数闻。政令之行，遂如臂使指。',log:'增置驿传。'},
+ ]},
+{id:'civ_xiushi',title:'开馆修史',once:true,w:1.5,cond:S=>S.year>=8,
+ spx:S=>spkOff('rites'),
+ body:S=>`国朝肇建以来，实录散佚，文献无征。臣请开史馆，命儒臣修国史、定礼乐——文治之盛，自此而彰。`,
+ opts:[
+  {txt:'武功未竟，罢其议',fx:{f:{scholar:[0,-4]}},result:'儒臣失望而退："盛世不修史，后世何述焉？"',log:'罢修史之议。'},
+  {txt:'开馆修史',fx:{t:-5,a:4,f:{scholar:[3,3]}},result:'史馆开于禁中，鸿儒毕集。帝御序文，文教灿然一新。',log:'开馆修国史。'},
+ ]},
+{id:'civ_kuli',title:'酷吏之议',cool:6,w:2,cond:S=>S.a<55,
+ spx:S=>spk('civil','大理寺评事','密荐能员'),
+ body:S=>`有吏深文峻法，所至豪强屏迹，号曰"乳虎"。或荐其堪大用：以酷吏行威，则朝廷之令无不行——然所过之处，冤狱亦盛。`,
+ opts:[
+  {txt:'斥而不用',fx:{p:3,a:-2},result:'帝曰："治国以仁，焉用乳虎。"清议称善。',log:'斥酷吏。'},
+  {txt:'擢用之',fx:{a:7,p:-6},after:S=>{const ks=shuffle(['gentry','scholar']).slice(0,1);fxc({f:{[ks[0]]:[0,-5]}});return `酷吏所至，囹圄为满，号令风行。${fname(ks[0])}多有下狱者，道路侧目。`;},log:'擢用酷吏。'},
+ ]},
+{id:'civ_xunxing',title:'请幸江南',cool:9,w:1.5,cond:S=>S.t>50,
+ spx:S=>spk('eunuch','内侍省都知','进巡幸之议'),
+ body:S=>`江南财赋之地，圣驾未尝一临。老奴斗胆：请陛下南巡，观风问俗，宣示威德——舟车仪卫，所费固不赀。`,
+ opts:[
+  {txt:'罢巡省费',fx:{p:2},result:'帝曰："朕居九重而知天下，何必劳民。"',log:'罢南巡之议。'},
+  {txt:'銮驾南巡',fx:{t:-12,a:8,p:-3},result:'龙舟千里，江南父老争睹天颜。威德远播，而供亿之费，州县颇以为苦。',log:'帝南巡江南。'},
+ ]},
 /* —— 危机（导演器优先抽取） —— */
+{id:'realm_invade',title:'敌国入寇',crisis:1,cool:3,w:6,
+ cond:S=>!S.war&&!S.flags.regency&&RKEYS.some(k=>{const R=S.realms[k];return !R.war&&R.rel<25&&R.might>50&&R.truce===0;}),
+ spx:S=>spk('war','八百里加急','边书雪片'),
+ setup:S=>{const ks=RKEYS.filter(k=>{const R=S.realms[k];return !R.war&&R.rel<25&&R.might>50&&R.truce===0;});if(!ks.length)return null;return{k:pick(ks)};},
+ tag:{txt:'危',color:'#8a2f28'},
+ body:(S,c)=>`${rname(c.k)}大举入寇！${realm(c.k).might>65?'号称控弦三十万，':''}连破边堡，兵锋已及内地，州县望风奔溃——战守之策，决于今日！\n${foeLine(c.k)}`,
+ opts:[
+  {txt:'纳币乞和',fxf:(S,c)=>({t:-12,a:-6,r:{[c.k]:[12,0]}}),after:(S,c)=>{realm(c.k).truce=2;return null;},result:'卑辞厚币，敌兵受赂而退。边民收拾劫余，朝中清议汹汹。',log:'敌入寇，纳币乞和。'},
+  {txt:'整军迎战',risky:1,fx:{},after:(S,c)=>{startWar(c.k,{defensive:true});return `帝拍案而起："社稷之主，岂能赂敌求生！"诏天下勤王，大军开赴边关——${rname(c.k)}之役，自此始矣。`;},log:'敌入寇，整军迎战。'},
+ ]},
 {id:'sick',title:'圣体违和',crisis:1,cool:2,w:4,cond:S=>S.emperor.health<40,
  spx:S=>spk('physician','太医令','跪奏脉案'),
  body:S=>`陛下连日不豫，${S.emperor.health<25?'药石罔效，臣等束手':'臣请静养勿劳'}。朝野闻之人心浮动${S.princes.some(p=>p.crown)?'':'，皆因储位未定而忧'}——有方士自荐金丹，云可延年。`,
@@ -1980,7 +2280,7 @@ const QUESTS={
    LLM：动态事件 / 史官曰 / 召对
    ============================================================ */
 const LLM_SPEAKERS={'大臣':null,'御史':'censor','边将':'war','宦官':'eunuch','妃嫔':'lady','僧人':'monk','方士':'daoist','老农':'farmer','富商':'merchant','番使':'envoy','学子':'student','太医':'physician'};
-const EV_TYPES=['财政','民生','军事','边贸','派系','宫闱','刑狱','天象','奇闻','匠作','漕运','学宫'];
+const EV_TYPES=['财政','民生','军事','边贸','外交','吏治','派系','宫闱','刑狱','天象','奇闻','匠作','漕运','学宫'];
 let llmHardOff=false,cardCount=0;
 
 /* ---- 键值存储：window.storage -> localStorage -> 内存，逐级降级 ---- */
@@ -2088,6 +2388,8 @@ function stateDigest(){
    +`国库${lvl(S.t)}，民心${lvl(S.p)}，军备${lvl(S.m)}，皇权${lvl(S.a)}。`
    +`最强两派：${fname(tf[0].key)}（势${Math.round(tf[0].power)}，${att(tf[0].key)}）、${fname(tf[1].key)}（势${Math.round(tf[1].power)}，${att(tf[1].key)}）。`
    +(ch?`宰相${ch.name}（${fname(ch.faction)}）。`:'相位虚悬。')
+   +`四夷：${RKEYS.map(k=>{const R=S.realms[k];return rname(k)+'（'+relTxt(R)+(R.tribute?'·称藩':R.market?'·互市':'')+'）';}).join('、')}。`
+   +(S.war?`正与${rname(S.war.k)}交兵（${warScoreTxt()}）。`:'')
    +(S.quest?`正推行国策【${QUESTS[S.quest.id].name}】。`:'');
 }
 function validateEv(e,cap){
@@ -2108,6 +2410,13 @@ function validateEv(e,cap){
         if(fk&&Array.isArray(o.f[fk])){
           const dp=clamp(Math.round(Number(o.f[fk][0])||0),-8,8),da=clamp(Math.round(Number(o.f[fk][1])||0),-8,8);
           if(dp||da)fx.f={[fk]:[dp,da]};
+        }
+      }
+      if(o.r&&typeof o.r==='object'){
+        const rk=Object.keys(o.r).find(k=>RKEYS.includes(k));
+        if(rk&&Array.isArray(o.r[rk])){
+          const dr=clamp(Math.round(Number(o.r[rk][0])||0),-10,10),dm=clamp(Math.round(Number(o.r[rk][1])||0),-6,6);
+          if(dr||dm)fx.r={[rk]:[dr,dm]};
         }
       }
       const result=o.result?String(o.result).trim().slice(0,70):null;
@@ -2158,6 +2467,7 @@ async function genBatch(){
 【硬性规则】
 - t国库 p民心 m军备 a皇权，整数，无变化的键省略；每个选项至少影响1个维度，且要有真实代价
 - f可省略；若有，键只能是gentry/scholar/eunuch/consort/army之一，值为[势力增减,恭顺增减]各±8内
+- 涉外交事件可加r；键只能是di北狄/zhao南诏/hai海东之一，值为[邦交增减±10内,国势增减±6内]
 - 恰好2个opts，两难取舍；不出现真实历史人名朝代名`;
   const text=await llmCall([{role:'user',content:prompt}]);
   const j=llmParseEvents(text);
@@ -2276,6 +2586,7 @@ function renderPanel(){
   const b=$('#panel-body');
   if(panelTab==='court')b.innerHTML=panelCourt();
   else if(panelTab==='pal')b.innerHTML=panelPal();
+  else if(panelTab==='realm')b.innerHTML=panelRealm();
   else if(panelTab==='quest')b.innerHTML=panelQuest();
   else b.innerHTML=panelHist();
   b.querySelectorAll('.ro[data-mid]').forEach(el=>{
@@ -2316,6 +2627,28 @@ function panelPal(){
   S.princes.forEach(p=>{
     h+=`<div class="pal-card">${esc(p.name)}　${cn(p.age)}岁 ${p.crown?'<span class="crown">皇太子</span>':''}<div class="pal-sub">才具${starStr(p.talent)} ｜ 体格${p.health<40?'孱弱':p.health<70?'平平':'康健'}${(p.scheming||0)>=3?' ｜ <span class="tag-warn">门下宾客如市</span>':''}</div></div>`;
   });
+  return h;
+}
+function panelRealm(){
+  let h='';
+  if(S.war){
+    const W=S.war;
+    h+='<h3 class="sec">兵事</h3>';
+    h+=`<div class="pal-card"><b class="kai">征${rname(W.k)}</b>　${W.year>0?'兵连'+cn(W.year)+'年':'兵端方启'}<div class="pal-sub">战局：${warScoreTxt()} ｜ 馈饷岁耗不赀，久战伤民</div></div>`;
+  }
+  h+='<h3 class="sec">四夷邦交</h3>';
+  RKEYS.forEach(k=>{
+    const R=S.realms[k],D=REALMS[k];
+    const tags=[];
+    if(R.war)tags.push('<span class="tag-warn">交兵</span>');
+    if(R.tribute)tags.push('<span class="crown">称藩</span>');
+    if(R.market)tags.push('互市');
+    if(!R.war&&R.truce>0)tags.push('休兵之约');
+    h+=`<div class="fac-row"><div class="fac-top"><span class="fac-name" style="color:${D.hex}">${D.name}</span><span style="font-size:10.5px;color:var(--ink-faint)">${D.desc}${tags.length?'　'+tags.join(' · '):''}</span></div>
+    <div class="fbar"><span>邦交</span><div class="track"><i style="width:${Math.round(R.rel)}%;background:${R.rel<30?'#c0443a':'#8a7340'}"></i></div><span>${relTxt(R)}</span></div>
+    <div class="fbar"><span>国势</span><div class="track"><i style="width:${Math.round(R.might)}%;background:${D.hex}"></i></div><span>${mightTxt(R.might)}</span></div></div>`;
+  });
+  h+='<div class="small-dim">邦交随岁月消长：亲睦则市利岁入，交恶则边衅战端。互市、称藩各岁入+1</div>';
   return h;
 }
 function panelQuest(){
