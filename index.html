@@ -1264,7 +1264,7 @@ function commit(card,side){
   pulseOrbs();
   if(opt&&opt.next){try{S.pending.unshift(opt.next(S,card.ctx));}catch(e){}}
   if(extra){S.pending.unshift(noteCard(card.title||'后事',extra,card.sp));}
-  else if(opt&&opt.result){stripShow(opt.result);}
+  else if(opt&&opt.result){S.pending.unshift(noteCard(card.title||'后事',opt.result,card.sp));}
   let status='ok';
   if(card.seasonal){
     S.season++;
