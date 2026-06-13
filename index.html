@@ -621,7 +621,7 @@ function newGame(){
       hai:{rel:ri2(60,75),might:ri2(24,38),market:false,tribute:chance(.5),truce:0,war:false},
     },
     war:null,
-    flags:{regency:null,powerMin:null,prepRule:0,assassinated:false,warned:{},examReform:false,silkroad:false,pingzhun:false},
+    flags:{regency:null,powerMin:null,prepRule:0,assassinated:false,warned:{},warnedHi:{},deathCause:null,examReform:false,silkroad:false,pingzhun:false},
     cardQ:[],pending:[],whisPending:[],petDone:{},persDoneYr:0,
     quest:null,questCool:0,questsDone:{},
     log:[],cooldown:{},onceDone:{},recentTitles:[],
@@ -881,6 +881,8 @@ function yearTick(){
   if(S.score.years>90)drift.t-=1;
   if(S.score.years>180){drift.t-=1;drift.a-=1;}
   if(S.score.years>280){drift.t-=1;drift.a-=1;}
+  /* 物极必反：数值过盛者自然回落，给盛世留出缓冲、避免误顶 */
+  ['t','p','m','a'].forEach(k=>{if(S[k]>=86)drift[k]-=1;});
   applyFx(drift);
   if(checkFall())return 'over';
 
@@ -1011,12 +1013,21 @@ function yearTick(){
   ['t','p','m','a'].forEach(k=>{
     if(S[k]<18&&!S.flags.warned[k]){S.flags.warned[k]=1;S.pending.unshift(warnCard(k));}
     if(S[k]>=25)S.flags.warned[k]=0;
+    if(S[k]>82&&!S.flags.warnedHi[k]){S.flags.warnedHi[k]=1;S.pending.unshift(warnCard(k,true));}
+    if(S[k]<=75)S.flags.warnedHi[k]=0;
   });
   return 'ok';
 }
+function extremeKey(){
+  for(const k of ['t','p','m','a']){
+    if(S[k]<=0)return k;
+    if(S[k]>=100)return k.toUpperCase();
+  }
+  return null;
+}
 function checkFall(){
-  const f=S.t<=0?'t':S.p<=0?'p':S.m<=0?'m':S.a<=0?'a':null;
-  if(f)gameOver(f);
+  const f=extremeKey();
+  if(f)catastrophe(f);
   return f;
 }
 
@@ -1035,7 +1046,8 @@ function succession(){
   const temple=TEMPLE_SEQ[Math.min(S.gen,TEMPLE_SEQ.length-1)];
   const shi=shiOf(e,avg);
   e.temple=temple;
-  const deathLine=S.flags.assassinated?`帝崩于非命，春秋${e.age}。`:`帝崩于大内，春秋${e.age}。`;
+  const cause=S.flags.deathCause;S.flags.deathCause=null;
+  const deathLine=cause?`${cause.line}（春秋${e.age}）`:S.flags.assassinated?`帝崩于非命，春秋${e.age}。`:`帝崩于大内，春秋${e.age}。`;
   addLog(`${deathLine}庙号${temple}，谥曰${shi}皇帝，在位${e.reignYears}年。`,'big');
 
   let heir=S.princes.find(p=>p.crown)
@@ -1081,14 +1093,14 @@ function succession(){
   if(S.war)body+=`\n边烽未熄——与${rname(S.war.k)}之战事，仍待新君措置。`;
   S.era=newEra;S.eraYear=1;S.season=0;
   S.consorts=[];S.princes=[];S.empressFaction=null;
-  S.flags.prepRule=0;S.flags.assassinated=false;S.flags.warned={};
+  S.flags.prepRule=0;S.flags.assassinated=false;S.flags.warned={};S.flags.warnedHi={};
   FKEYS.forEach(k=>S.factions[k].plot=Math.max(0,S.factions[k].plot-3));
   S.cardQ=[];S.pending=[];S.whisPending=[];
   metaTouch();
   /* 史官曰（LLM润色，失败用静态） */
   const chron={text:null};
   llmChronicle(e,temple,shi,avg,chron);
-  showScreen({glyph:'崩',title:temple+shi+'皇帝',sub:`第${cn(S.gen-1)}代 · 在位${e.reignYears}年`,
+  showScreen({glyph:cause?cause.g:'崩',title:cause?cause.title:temple+shi+'皇帝',sub:`第${cn(S.gen-1)}代 · 在位${e.reignYears}年`,
     body,btn:regSetup?'幼主践祚':'嗣君即位',chron,
     cb:()=>{hideScreen();render();drawNext();}});
 }
@@ -1136,6 +1148,44 @@ function verdict(sc){
   if(sc.years>=30)return '史评：守成不易，为君实难。';
   return '史评：其兴也勃焉，其亡也忽焉。';
 }
+/* 非常继统：数值触顶/触底 → 一朝倾覆，然嗣君续之（出事数值回落、余创待新君收拾） */
+const CATA={
+  /* —— 触底 —— */
+  t:{g:'空',title:'府库枯竭',assassin:true,
+     line:'国库一空，百官星散，戍卒因饥哗溃。乱兵入京之夜，帝死于刀光火影之中，府库唯余空椟。',
+     rec:()=>{S.t=ri2(26,34);applyFx({p:-6,a:-6});}},
+  p:{g:'火',title:'万民倒戈',assassin:true,
+     line:'苛政猛于虎，赤旗自大泽而起。义军破禁城，帝为乱民所执，殁于乱中，宫阙化为焦土。',
+     rec:()=>{S.p=ri2(30,38);applyFx({t:-8,a:-6});}},
+  m:{g:'破',title:'神京陷落',assassin:true,
+     line:'武备尽弛，烽燧无人。胡骑长驱直入，神京陷于一旦——帝死社稷，宗庙为墟。',
+     rec:()=>{S.m=ri2(28,36);applyFx({t:-8,p:-6});}},
+  a:{g:'禅',title:'权臣窃柄',assassin:false,
+     line:'大权旁落，权臣逼宫。帝"暴疾"崩于别馆，传位之诏皆出权门，嗣君不过持玺之偶。',
+     rec:()=>{S.a=ri2(26,34);applyFx({p:-4});}},
+  /* —— 触顶 —— */
+  T:{g:'奢',title:'富以致祸',assassin:true,
+     line:'府库山积，金帛朽蠹，帝耽于声色珍玩。觊觎其财者鸩弑于深宫，金玉一夕散于群小之手。',
+     rec:()=>{S.t=ri2(54,62);applyFx({p:-6,a:-8});}},
+  P:{g:'潮',title:'邀誉失政',assassin:false,
+     line:'一味市恩邀誉，赏赍无度而法纪荡然。奸豪借爱戴之名横行州县，威令不行，帝忧惧成疾而崩。',
+     rec:()=>{S.p=ri2(54,60);applyFx({t:-8,a:-8});}},
+  M:{g:'袍',title:'黄袍加身',assassin:false,
+     line:'武人跋扈，将拥强兵而骄。一夕兵变，黄袍加于主将之身——帝被废幽死，幼子立于刀槊之间。',
+     rec:()=>{S.m=ri2(58,66);applyFx({a:-16});FKEYS.forEach(k=>{S.factions[k].plot=Math.max(0,S.factions[k].plot-1);});if(S.factions.army){S.factions.army.power=clamp(S.factions.army.power+14,5,100);S.factions.army.attitude=clamp(S.factions.army.attitude+8,0,100);}}},
+  A:{g:'孤',title:'独夫众叛',assassin:true,
+     line:'乾纲独断至于刚愎暴虐，箝天下之口。众叛亲离，左右内侍弑帝于寝殿，无一人援手。',
+     rec:()=>{S.a=ri2(48,56);applyFx({p:-8});FKEYS.forEach(k=>{S.factions[k].attitude=clamp(S.factions[k].attitude-6,0,100);});}},
+};
+function catastrophe(type){
+  const c=CATA[type];if(!c)return;
+  S.flags.assassinated=c.assassin;
+  S.flags.deathCause={g:c.g,title:c.title,line:c.line};
+  S.score.cata=(S.score.cata||0)+1;
+  addLog(`【${c.title}】帝崩，一朝几殆。`,'bad');
+  c.rec();
+  succession();
+}
 function gameOver(type){
   gameLive=false;
   const E=ENDINGS[type]||ENDINGS.a;
@@ -1172,10 +1222,16 @@ const WARN_DEF={
   m:{o:'war',b:'武备废弛已极！甲仗朽坏，士卒逃散，边堡空虚。\n一旦外敌入寇、内贼窃发，朝廷将无兵可用——练兵筹饷，刻不容缓！'},
   a:{o:'censor',b:'天子之令，渐不出宫门！权移于下，臣下视诏旨如故纸。\n大权一去不复返——伏望陛下振乾纲、收威柄，迟则有禅代之祸！'},
 };
-function warnCard(k){
-  const d=WARN_DEF[k];
-  const c=noteCard(STAT_NAMES[k]+'垂危',d.b,spkOff(d.o,'censor'));
-  c.tag={txt:'危',color:'#8a2f28'};
+const WARN_DEF_HI={
+  t:{o:'censor',b:'府库山积，金帛朽蠹，而宫室之费、赏赍之滥日甚一日。\n富者难久，骄奢生祸——伏望陛下散积聚、惜民财，毋使货悖入而悖出！'},
+  p:{o:'censor',b:'陛下圣德播于四海，万民称颂——然赏赍过厚、法度渐弛，奸猾遂借爱戴之名横行乡里。\n邀誉非长治之道，威令不行则乱自下生，愿陛下持法以驭恩。'},
+  m:{o:'censor',b:'甲兵之盛旷古未有；然将骄卒惰，拥强兵者渐萌不臣之心。\n兵者凶器，太阿倒持则反噬其主——伏望陛下抑武臣、收兵柄，毋蹈黄袍之祸！'},
+  a:{o:'censor',b:'乾纲独断，威柄尽收——然刚愎拒谏，箝塞众口。\n独运者必孤，孤则危。愿陛下开言路、纳逆耳，毋使上下相蒙、众心离散！'},
+};
+function warnCard(k,hi){
+  const d=(hi?WARN_DEF_HI:WARN_DEF)[k];
+  const c=noteCard(STAT_NAMES[k]+(hi?'过盛':'垂危'),d.b,spkOff(d.o,'censor'));
+  c.tag=hi?{txt:'盈',color:'#7a5a28'}:{txt:'危',color:'#8a2f28'};
   return c;
 }
 
@@ -1233,7 +1289,7 @@ let gameLive=false;
 function drawNext(){
   if(!gameLive||!S)return;
   if(S.emperor.health<=0&&!S.pending.length){succession();return;}
-  if((S.t<=0||S.p<=0||S.m<=0||S.a<=0)&&!S.pending.length){checkFall();return;}
+  if(extremeKey()&&!S.pending.length){checkFall();return;}
   let card=S.pending.shift();
   if(!card)card=seasonalCard();
   S.cur=card;
