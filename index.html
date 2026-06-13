@@ -182,6 +182,8 @@ h3.sec::after{background:linear-gradient(90deg,var(--gold-dim),transparent)}
 #screen.on{display:flex}
 #screen .sc-glyph{font-family:"Kaiti SC","STKaiti","KaiTi",serif;font-size:60px;color:var(--cinnabar);line-height:1;margin-bottom:12px;text-shadow:0 0 30px rgba(192,68,58,.3)}
 #screen .sc-glyph.gold{color:var(--gold-bright);text-shadow:0 0 30px rgba(201,164,85,.35)}
+#screen .sc-art{width:148px;height:148px;margin-bottom:14px;filter:drop-shadow(0 6px 18px rgba(0,0,0,.5))}
+#screen .sc-art svg{width:100%;height:100%}
 #screen h1{font-family:"Kaiti SC","STKaiti","KaiTi",serif;font-size:28px;letter-spacing:7px;margin-bottom:5px}
 #screen .sc-sub{font-size:12.5px;color:var(--ink-dim);letter-spacing:2px;margin-bottom:16px}
 #screen .sc-body{font-size:14px;line-height:2;max-width:480px;text-align:left;white-space:pre-line;margin-bottom:8px}
@@ -499,7 +501,83 @@ function orbSVG(k,val,size){
   </svg>`;
 }
 
-if(typeof module!=='undefined')module.exports={portraitSVG,orbSVG,shade};
+/* ===== 结局场景图(120×120 SVG) — 八种非常继统 + 废黜 ===== */
+const END_ART=(()=>{
+  const G='#c9a455',GB='#d9b96a',GD='#9a7b34',C='#e05c50',CD='#b5443a',CO='#8a2f28',
+        ST='#cdd2d8',MT='#5a626a',SH='#1c150f',WOOD='#3a2f22',WOODL='#46392a';
+  const F=(inner,ac)=>`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">`
+    +`<defs><radialGradient id="agb" cx="50%" cy="40%" r="72%"><stop offset="0" stop-color="#241b11"/><stop offset="1" stop-color="#100b08"/></radialGradient></defs>`
+    +`<rect width="120" height="120" rx="11" fill="url(#agb)"/>`
+    +`<rect x="3.5" y="3.5" width="113" height="113" rx="8.5" fill="none" stroke="${ac||G}" stroke-width="1" opacity=".5"/>`
+    +`<g opacity=".9">${inner}</g></svg>`;
+  return {
+    /* 空 — 府库枯竭：开启的空匮、孤钱、蛛网 */
+    '空':F(`<path d="M34,55 L40,39 Q60,33 80,39 L86,55 Z" fill="${WOODL}" stroke="#5a4a34" stroke-width="1.4"/>`
+      +`<path d="M38,47 Q60,42 82,47" stroke="${G}" stroke-width="1.3" fill="none" opacity=".7"/>`
+      +`<path d="M30,60 H90 V92 Q90,96 86,96 H34 Q30,96 30,92 Z" fill="${WOOD}" stroke="#5a4a34" stroke-width="1.5"/>`
+      +`<path d="M36,60 H84 L80,70 H40 Z" fill="#0c0806"/>`
+      +`<rect x="55" y="62" width="10" height="9" rx="1.5" fill="${G}" opacity=".5"/>`
+      +`<circle cx="42" cy="101" r="5" fill="none" stroke="${G}" stroke-width="1.5"/><rect x="40" y="99" width="4" height="4" fill="none" stroke="${G}" stroke-width=".9"/>`
+      +`<path d="M104,16 L82,28 M104,16 L90,40 M104,16 L80,20 M88,22 Q95,28 90,35 M83,26 Q91,31 87,39" stroke="${G}" stroke-width=".5" fill="none" opacity=".35"/>`,CD),
+    /* 火 — 万民倒戈：烈焰、举起的械具、义旗 */
+    '火':F(`<g stroke="#8a7a5c" stroke-width="2" stroke-linecap="round"><path d="M34,108 L40,42"/><path d="M52,108 L52,34"/><path d="M70,108 L64,42"/><path d="M88,108 L94,46"/></g>`
+      +`<path d="M40,42 l-3,8 6,0 z" fill="${ST}"/><path d="M64,42 l-3,8 6,0 z" fill="${ST}"/>`
+      +`<path d="M50,34 v-9 M52,34 v-10 M54,34 v-9" stroke="${ST}" stroke-width="1.5" stroke-linecap="round"/>`
+      +`<path d="M94,46 L112,50 L107,59 L94,57 Z" fill="${CO}" stroke="${G}" stroke-width=".8"/>`
+      +`<path d="M18,110 Q26,86 33,110 Q40,82 48,110 Q54,88 62,110 Q68,80 76,110 Q83,86 90,110 Q96,84 102,110 Z" fill="${CD}"/>`
+      +`<path d="M28,110 Q35,92 42,110 Q50,88 58,110 Q66,90 74,110 Q82,92 88,110 Z" fill="${C}"/>`
+      +`<path d="M40,110 Q47,98 54,110 Q62,98 70,110 Z" fill="#e8b04a"/>`),
+    /* 破 — 神京陷落：残破城垣、缺口、烽烟、流矢 */
+    '破':F(`<g stroke="${ST}" stroke-width="1.4" stroke-linecap="round"><path d="M30,16 L37,30"/><path d="M46,12 L52,28"/><path d="M82,16 L75,30"/></g>`
+      +`<path d="M37,30 l-4,-1 1,4 z" fill="${ST}"/><path d="M52,28 l-4,-1 1,4 z" fill="${ST}"/><path d="M75,30 l4,-1 -1,4 z" fill="${ST}"/>`
+      +`<path d="M52,72 Q44,60 52,50 Q60,42 53,30" stroke="#7a6f60" stroke-width="3" fill="none" opacity=".5" stroke-linecap="round"/>`
+      +`<path d="M16,98 V62 H24 V54 H32 V62 H40 V54 H48 V62 L57,80 L65,62 H72 V54 H80 V62 H88 V54 H96 V62 H104 V98 Z" fill="${WOODL}" stroke="#5f5443" stroke-width="1.2"/>`
+      +`<path d="M50,98 L57,80 L65,98 Z" fill="#221c15"/>`
+      +`<path d="M46,98 Q53,88 60,98 Q67,88 74,98 Z" fill="${CD}" opacity=".85"/>`,CD),
+    /* 禅 — 权臣窃柄：空置的龙椅、逼临的权臣黑影 */
+    '禅':F(`<path d="M26,102 H94 L88,92 H32 Z" fill="${WOOD}"/><path d="M34,92 H86 L81,84 H39 Z" fill="${WOODL}"/>`
+      +`<path d="M44,84 V50 Q44,44 50,44 H70 Q76,44 76,50 V84 Z" fill="#5a3030" stroke="${G}" stroke-width="1.2"/>`
+      +`<circle cx="60" cy="56" r="8.5" fill="none" stroke="${G}" stroke-width="1.4"/><path d="M55,56 q5,-6 10,0 q-5,6 -10,0" fill="${G}" opacity=".75"/>`
+      +`<path d="M38,68 H44 M76,68 H82" stroke="${G}" stroke-width="2.6" stroke-linecap="round"/>`
+      +`<path d="M40,88 H80 V84 H40 Z" fill="#0c0806" opacity=".5"/>`
+      +`<path d="M84,90 Q88,58 96,52 Q105,58 104,90 Z" fill="${SH}"/><circle cx="95" cy="46" r="6" fill="${SH}"/>`),
+    /* 奢 — 富以致祸：金山、鸩觞、暗藏的匕首 */
+    '奢':F(`<path d="M22,99 Q60,70 98,99 Z" fill="#7a5f28"/>`
+      +`<path d="M84,42 L96,66" stroke="${ST}" stroke-width="2.4" stroke-linecap="round"/><path d="M82,40 L89,38 L87,47 Z" fill="${MT}"/>`
+      +`<g fill="none" stroke="${G}" stroke-width="1.5"><circle cx="38" cy="92" r="5"/><circle cx="52" cy="96" r="5"/><circle cx="68" cy="94" r="5"/><circle cx="82" cy="96" r="5"/><circle cx="59" cy="86" r="5"/></g>`
+      +`<g fill="${G}" opacity=".45"><rect x="36" y="90" width="4" height="4"/><rect x="50" y="94" width="4" height="4"/><rect x="66" y="92" width="4" height="4"/><rect x="57" y="84" width="4" height="4"/></g>`
+      +`<path d="M49,56 L71,56 L66,70 H54 Z" fill="${CO}" stroke="${G}" stroke-width="1.2"/><path d="M60,70 V79 M53,79 H67" stroke="${G}" stroke-width="1.7" stroke-linecap="round"/>`
+      +`<path d="M57,48 q-3,-6 2,-10 q4,3 1,9" stroke="#7faa86" stroke-width="1.5" fill="none" opacity=".75"/><circle cx="62" cy="54" r="1.4" fill="#7faa86" opacity=".75"/>`),
+    /* 潮 — 邀誉失政：滔天民潮、倾覆的法碑、举手的群众 */
+    '潮':F(`<path d="M120,36 Q94,26 82,50 Q75,64 88,72 Q70,65 62,80 Q57,90 70,96 L120,96 Z" fill="#4f6f7e"/>`
+      +`<path d="M120,46 Q98,38 88,58 Q83,70 94,76 L120,76 Z" fill="#7699a9"/>`
+      +`<path d="M82,50 q7,-5 12,0 M62,80 q7,-5 12,0" stroke="${GB}" stroke-width="1.4" fill="none"/><circle cx="88" cy="48" r="2.2" fill="${GB}"/><circle cx="68" cy="78" r="2.2" fill="${GB}"/>`
+      +`<g transform="rotate(-24 40 82)"><rect x="29" y="64" width="20" height="34" rx="2" fill="${WOOD}" stroke="${G}" stroke-width="1.2"/><path d="M35,72 H43 M35,79 H43 M35,86 H43" stroke="${G}" stroke-width="1" opacity=".6"/></g>`
+      +`<g stroke="${SH}" stroke-width="2.6" stroke-linecap="round"><path d="M52,100 V90 M58,100 V87 M64,100 V91 M70,100 V89"/></g>`,'#5f7a8a'),
+    /* 袍 — 黄袍加身：戈戟丛中高举的龙袍 */
+    '袍':F(`<g stroke="#8a7a5c" stroke-width="2" stroke-linecap="round"><path d="M30,106 L23,40"/><path d="M48,106 L46,32"/><path d="M72,106 L74,32"/><path d="M90,106 L97,40"/></g>`
+      +`<g fill="${ST}"><path d="M23,40 l-3,8 6,0 z"/><path d="M46,32 l-3,8 6,0 z"/><path d="M74,32 l-3,8 6,0 z"/><path d="M97,40 l-3,8 6,0 z"/></g>`
+      +`<path d="M44,42 Q60,32 76,42 L84,58 L74,62 L76,98 Q60,102 44,98 L46,62 L36,58 Z" fill="${GB}" stroke="${GD}" stroke-width="1.4"/>`
+      +`<path d="M44,54 L34,68 L40,72 L48,62 Z" fill="${G}"/><path d="M76,54 L86,68 L80,72 L72,62 Z" fill="${G}"/>`
+      +`<path d="M60,42 L52,56 M60,42 L68,56" stroke="${GD}" stroke-width="1.6" fill="none"/>`
+      +`<circle cx="60" cy="74" r="8" fill="none" stroke="${GD}" stroke-width="1.2"/><path d="M55,74 q5,-6 10,0 q-5,6 -10,0" fill="${GD}"/>`),
+    /* 孤 — 独夫众叛：孤坐之君、背后利刃、众人转背 */
+    '孤':F(`<path d="M30,104 H90 L84,94 H36 Z" fill="${WOOD}"/>`
+      +`<path d="M104,28 L74,58" stroke="${ST}" stroke-width="2.6" stroke-linecap="round"/><path d="M106,26 L113,24 L111,33 Z" fill="${MT}"/>`
+      +`<path d="M51,93 Q51,71 60,69 Q69,71 69,93 Z" fill="#5a3030" stroke="${G}" stroke-width="1"/>`
+      +`<circle cx="60" cy="63" r="6.2" fill="#d9b287"/><path d="M53,57 H67 L65,51 H55 Z" fill="${G}"/>`
+      +`<g fill="${SH}"><path d="M12,104 Q12,84 20,82 Q28,84 28,104 Z"/><path d="M92,104 Q92,86 100,84 Q108,86 108,104 Z"/></g>`
+      +`<circle cx="20" cy="77" r="5.2" fill="${SH}"/><circle cx="100" cy="79" r="5.2" fill="${SH}"/>`),
+    /* 废 — 幼帝见废：撕裂的诏书、坠地的小冠、幽闭门扉 */
+    '废':F(`<path d="M30,30 H62 L60,86 H32 Z" fill="#e7dcc4" stroke="#b6a884" stroke-width="1" transform="rotate(-7 46 58)"/>`
+      +`<g transform="rotate(-7 46 58)" stroke="#9a8c6a" stroke-width="1" opacity=".7"><path d="M36,40 V78 M44,38 V80 M52,40 V78"/></g>`
+      +`<path d="M58,28 H92 L96,84 H64 Z" fill="#d8ccb2" stroke="#b6a884" stroke-width="1" transform="rotate(9 76 56)"/>`
+      +`<path d="M60,30 L66,84" stroke="${CO}" stroke-width="2" fill="none" transform="rotate(2 62 56)"/>`
+      +`<path d="M44,96 L60,90 L76,96 L72,104 L48,104 Z" fill="${SH}"/>`
+      +`<path d="M52,90 L54,82 H66 L68,90 Z" fill="#2c2620" stroke="${G}" stroke-width=".8"/><path d="M58,82 L60,76 L62,82 Z" fill="${G}"/>`,CD),
+  };
+})();
+if(typeof module!=='undefined')module.exports={portraitSVG,orbSVG,shade,END_ART};
 
 /* ---------- 工具 ---------- */
 const $=s=>document.querySelector(s);
@@ -621,7 +699,7 @@ function newGame(){
       hai:{rel:ri2(60,75),might:ri2(24,38),market:false,tribute:chance(.5),truce:0,war:false},
     },
     war:null,
-    flags:{regency:null,powerMin:null,prepRule:0,assassinated:false,warned:{},examReform:false,silkroad:false,pingzhun:false},
+    flags:{regency:null,powerMin:null,prepRule:0,assassinated:false,warned:{},warnedHi:{},deathCause:null,examReform:false,silkroad:false,pingzhun:false},
     cardQ:[],pending:[],whisPending:[],petDone:{},persDoneYr:0,
     quest:null,questCool:0,questsDone:{},
     log:[],cooldown:{},onceDone:{},recentTitles:[],
@@ -881,6 +959,8 @@ function yearTick(){
   if(S.score.years>90)drift.t-=1;
   if(S.score.years>180){drift.t-=1;drift.a-=1;}
   if(S.score.years>280){drift.t-=1;drift.a-=1;}
+  /* 物极必反：数值过盛者自然回落，给盛世留出缓冲、避免误顶 */
+  ['t','p','m','a'].forEach(k=>{if(S[k]>=86)drift[k]-=1;});
   applyFx(drift);
   if(checkFall())return 'over';
 
@@ -1011,12 +1091,21 @@ function yearTick(){
   ['t','p','m','a'].forEach(k=>{
     if(S[k]<18&&!S.flags.warned[k]){S.flags.warned[k]=1;S.pending.unshift(warnCard(k));}
     if(S[k]>=25)S.flags.warned[k]=0;
+    if(S[k]>82&&!S.flags.warnedHi[k]){S.flags.warnedHi[k]=1;S.pending.unshift(warnCard(k,true));}
+    if(S[k]<=75)S.flags.warnedHi[k]=0;
   });
   return 'ok';
 }
+function extremeKey(){
+  for(const k of ['t','p','m','a']){
+    if(S[k]<=0)return k;
+    if(S[k]>=100)return k.toUpperCase();
+  }
+  return null;
+}
 function checkFall(){
-  const f=S.t<=0?'t':S.p<=0?'p':S.m<=0?'m':S.a<=0?'a':null;
-  if(f)gameOver(f);
+  const f=extremeKey();
+  if(f)catastrophe(f);
   return f;
 }
 
@@ -1035,7 +1124,8 @@ function succession(){
   const temple=TEMPLE_SEQ[Math.min(S.gen,TEMPLE_SEQ.length-1)];
   const shi=shiOf(e,avg);
   e.temple=temple;
-  const deathLine=S.flags.assassinated?`帝崩于非命，春秋${e.age}。`:`帝崩于大内，春秋${e.age}。`;
+  const cause=S.flags.deathCause;S.flags.deathCause=null;
+  const deathLine=cause?`${cause.line}（春秋${e.age}）`:S.flags.assassinated?`帝崩于非命，春秋${e.age}。`:`帝崩于大内，春秋${e.age}。`;
   addLog(`${deathLine}庙号${temple}，谥曰${shi}皇帝，在位${e.reignYears}年。`,'big');
 
   let heir=S.princes.find(p=>p.crown)
@@ -1081,14 +1171,14 @@ function succession(){
   if(S.war)body+=`\n边烽未熄——与${rname(S.war.k)}之战事，仍待新君措置。`;
   S.era=newEra;S.eraYear=1;S.season=0;
   S.consorts=[];S.princes=[];S.empressFaction=null;
-  S.flags.prepRule=0;S.flags.assassinated=false;S.flags.warned={};
+  S.flags.prepRule=0;S.flags.assassinated=false;S.flags.warned={};S.flags.warnedHi={};
   FKEYS.forEach(k=>S.factions[k].plot=Math.max(0,S.factions[k].plot-3));
   S.cardQ=[];S.pending=[];S.whisPending=[];
   metaTouch();
   /* 史官曰（LLM润色，失败用静态） */
   const chron={text:null};
   llmChronicle(e,temple,shi,avg,chron);
-  showScreen({glyph:'崩',title:temple+shi+'皇帝',sub:`第${cn(S.gen-1)}代 · 在位${e.reignYears}年`,
+  showScreen({glyph:cause?cause.g:'崩',art:cause?END_ART[cause.g]:null,title:cause?cause.title:temple+shi+'皇帝',sub:`第${cn(S.gen-1)}代 · 在位${e.reignYears}年`,
     body,btn:regSetup?'幼主践祚':'嗣君即位',chron,
     cb:()=>{hideScreen();render();drawNext();}});
 }
@@ -1136,6 +1226,44 @@ function verdict(sc){
   if(sc.years>=30)return '史评：守成不易，为君实难。';
   return '史评：其兴也勃焉，其亡也忽焉。';
 }
+/* 非常继统：数值触顶/触底 → 一朝倾覆，然嗣君续之（出事数值回落、余创待新君收拾） */
+const CATA={
+  /* —— 触底 —— */
+  t:{g:'空',title:'府库枯竭',assassin:true,
+     line:'国库一空，百官星散，戍卒因饥哗溃。乱兵入京之夜，帝死于刀光火影之中，府库唯余空椟。',
+     rec:()=>{S.t=ri2(26,34);applyFx({p:-6,a:-6});}},
+  p:{g:'火',title:'万民倒戈',assassin:true,
+     line:'苛政猛于虎，赤旗自大泽而起。义军破禁城，帝为乱民所执，殁于乱中，宫阙化为焦土。',
+     rec:()=>{S.p=ri2(30,38);applyFx({t:-8,a:-6});}},
+  m:{g:'破',title:'神京陷落',assassin:true,
+     line:'武备尽弛，烽燧无人。胡骑长驱直入，神京陷于一旦——帝死社稷，宗庙为墟。',
+     rec:()=>{S.m=ri2(28,36);applyFx({t:-8,p:-6});}},
+  a:{g:'禅',title:'权臣窃柄',assassin:false,
+     line:'大权旁落，权臣逼宫。帝"暴疾"崩于别馆，传位之诏皆出权门，嗣君不过持玺之偶。',
+     rec:()=>{S.a=ri2(26,34);applyFx({p:-4});}},
+  /* —— 触顶 —— */
+  T:{g:'奢',title:'富以致祸',assassin:true,
+     line:'府库山积，金帛朽蠹，帝耽于声色珍玩。觊觎其财者鸩弑于深宫，金玉一夕散于群小之手。',
+     rec:()=>{S.t=ri2(54,62);applyFx({p:-6,a:-8});}},
+  P:{g:'潮',title:'邀誉失政',assassin:false,
+     line:'一味市恩邀誉，赏赍无度而法纪荡然。奸豪借爱戴之名横行州县，威令不行，帝忧惧成疾而崩。',
+     rec:()=>{S.p=ri2(54,60);applyFx({t:-8,a:-8});}},
+  M:{g:'袍',title:'黄袍加身',assassin:false,
+     line:'武人跋扈，将拥强兵而骄。一夕兵变，黄袍加于主将之身——帝被废幽死，幼子立于刀槊之间。',
+     rec:()=>{S.m=ri2(58,66);applyFx({a:-16});FKEYS.forEach(k=>{S.factions[k].plot=Math.max(0,S.factions[k].plot-1);});if(S.factions.army){S.factions.army.power=clamp(S.factions.army.power+14,5,100);S.factions.army.attitude=clamp(S.factions.army.attitude+8,0,100);}}},
+  A:{g:'孤',title:'独夫众叛',assassin:true,
+     line:'乾纲独断至于刚愎暴虐，箝天下之口。众叛亲离，左右内侍弑帝于寝殿，无一人援手。',
+     rec:()=>{S.a=ri2(48,56);applyFx({p:-8});FKEYS.forEach(k=>{S.factions[k].attitude=clamp(S.factions[k].attitude-6,0,100);});}},
+};
+function catastrophe(type){
+  const c=CATA[type];if(!c)return;
+  S.flags.assassinated=c.assassin;
+  S.flags.deathCause={g:c.g,title:c.title,line:c.line};
+  S.score.cata=(S.score.cata||0)+1;
+  addLog(`【${c.title}】帝崩，一朝几殆。`,'bad');
+  c.rec();
+  succession();
+}
 function gameOver(type){
   gameLive=false;
   const E=ENDINGS[type]||ENDINGS.a;
@@ -1143,7 +1271,7 @@ function gameOver(type){
   const sc=S.score;
   metaEnd(type);
   const body=`${E.b}\n\n——————————\n国祚 ${sc.years} 年 ｜ 传承 ${sc.gens} 代 ｜ 盛世 ${sc.golden} 年\n——————————\n${verdict(sc)}`;
-  showScreen({glyph:E.g,title:E.t,sub:'社稷倾覆',body,btn:'重整山河',
+  showScreen({glyph:E.g,art:END_ART[E.g]||null,title:E.t,sub:'社稷倾覆',body,btn:'重整山河',
     cb:()=>{hideScreen();titleScreen();}});
 }
 
@@ -1172,10 +1300,16 @@ const WARN_DEF={
   m:{o:'war',b:'武备废弛已极！甲仗朽坏，士卒逃散，边堡空虚。\n一旦外敌入寇、内贼窃发，朝廷将无兵可用——练兵筹饷，刻不容缓！'},
   a:{o:'censor',b:'天子之令，渐不出宫门！权移于下，臣下视诏旨如故纸。\n大权一去不复返——伏望陛下振乾纲、收威柄，迟则有禅代之祸！'},
 };
-function warnCard(k){
-  const d=WARN_DEF[k];
-  const c=noteCard(STAT_NAMES[k]+'垂危',d.b,spkOff(d.o,'censor'));
-  c.tag={txt:'危',color:'#8a2f28'};
+const WARN_DEF_HI={
+  t:{o:'censor',b:'府库山积，金帛朽蠹，而宫室之费、赏赍之滥日甚一日。\n富者难久，骄奢生祸——伏望陛下散积聚、惜民财，毋使货悖入而悖出！'},
+  p:{o:'censor',b:'陛下圣德播于四海，万民称颂——然赏赍过厚、法度渐弛，奸猾遂借爱戴之名横行乡里。\n邀誉非长治之道，威令不行则乱自下生，愿陛下持法以驭恩。'},
+  m:{o:'censor',b:'甲兵之盛旷古未有；然将骄卒惰，拥强兵者渐萌不臣之心。\n兵者凶器，太阿倒持则反噬其主——伏望陛下抑武臣、收兵柄，毋蹈黄袍之祸！'},
+  a:{o:'censor',b:'乾纲独断，威柄尽收——然刚愎拒谏，箝塞众口。\n独运者必孤，孤则危。愿陛下开言路、纳逆耳，毋使上下相蒙、众心离散！'},
+};
+function warnCard(k,hi){
+  const d=(hi?WARN_DEF_HI:WARN_DEF)[k];
+  const c=noteCard(STAT_NAMES[k]+(hi?'过盛':'垂危'),d.b,spkOff(d.o,'censor'));
+  c.tag=hi?{txt:'盈',color:'#7a5a28'}:{txt:'危',color:'#8a2f28'};
   return c;
 }
 
@@ -1233,7 +1367,7 @@ let gameLive=false;
 function drawNext(){
   if(!gameLive||!S)return;
   if(S.emperor.health<=0&&!S.pending.length){succession();return;}
-  if((S.t<=0||S.p<=0||S.m<=0||S.a<=0)&&!S.pending.length){checkFall();return;}
+  if(extremeKey()&&!S.pending.length){checkFall();return;}
   let card=S.pending.shift();
   if(!card)card=seasonalCard();
   S.cur=card;
@@ -2679,7 +2813,7 @@ function panelHist(){
    ============================================================ */
 function showScreen(o){
   const sc=$('#screen');
-  sc.innerHTML=`<div class="sc-glyph kai ${o.gold?'gold':''}">${esc(o.glyph||'')}</div>
+  sc.innerHTML=`${o.art?`<div class="sc-art">${o.art}</div>`:`<div class="sc-glyph kai ${o.gold?'gold':''}">${esc(o.glyph||'')}</div>`}
    <h1 class="kai">${esc(o.title||'')}</h1>
    <div class="sc-sub">${esc(o.sub||'')}</div>
    <div class="sc-body">${esc(o.body||'')}</div>
